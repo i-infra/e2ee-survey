@@ -357,7 +357,7 @@ Description of your survey goes here.
                 const baseUrl = window.location.origin;
                 const password = encodeURIComponent(passwordInput.value);
                 const surveyUrlValue = `${baseUrl}/survey/${result.data.id}#${password}`;
-                const analysisUrlValue = `${baseUrl}/analyze/${result.data.id}#${password}`;
+                const analysisUrlValue = `${baseUrl}/analyze/${result.data.analysisId}#${password}`;
                 
                 surveyUrl.href = surveyUrlValue;
                 surveyUrl.textContent = surveyUrlValue;

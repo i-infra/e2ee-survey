@@ -262,6 +262,22 @@
         .hidden {
             display: none;
         }
+        
+        .danger-section {
+            border-top: 1px solid #e2e8f0;
+            padding-top: 30px;
+            margin-top: 30px;
+        }
+        
+        .danger-btn {
+            background: #e53e3e;
+            color: white;
+            margin-top: 10px;
+        }
+        
+        .danger-btn:hover {
+            background: #c53030;
+        }
     </style>
 </head>
 <body>
@@ -308,6 +324,12 @@
                 <button class="secondary-btn" id="exportJsonBtn">📄 Export as JSON</button>
                 <button class="secondary-btn" id="exportCsvBtn">📊 Export as CSV</button>
             </div>
+            
+            <div class="danger-section">
+                <h3>⚠️ Danger Zone</h3>
+                <p>Permanently delete this survey and all responses. This action cannot be undone.</p>
+                <button class="secondary-btn danger-btn" id="deleteSurveyBtn">🗑️ Delete Survey</button>
+            </div>
         </div>
         
         <div class="status" id="status"></div>
@@ -319,8 +341,8 @@
         // Initialize crypto libraries
         initCrypto(nacl, argon2);
         
-        // Get survey ID from URL
-        const surveyId = window.location.pathname.split('/analyze/')[1];
+        // Get analysis ID from URL
+        const analysisId = window.location.pathname.split('/analyze/')[1];
         
         // DOM elements
         const passwordPrompt = document.getElementById('passwordPrompt');
@@ -336,12 +358,14 @@
         const questionsAnalysis = document.getElementById('questionsAnalysis');
         const exportJsonBtn = document.getElementById('exportJsonBtn');
         const exportCsvBtn = document.getElementById('exportCsvBtn');
+        const deleteSurveyBtn = document.getElementById('deleteSurveyBtn');
         const status = document.getElementById('status');
         
         let currentSurvey = null;
         let surveyData = null;
         let encryptionKey = null;
         let responsesData = null;
+        let currentSurveyId = null;
         
         // Check URL fragment for password
         async function checkUrlFragment() {
@@ -388,8 +412,8 @@
                 
                 showStatus('📡 Loading survey data...', 'info');
                 
-                // Load survey
-                const surveyResponse = await fetch(`/api/survey/${surveyId}`);
+                // Load survey data using analysis ID
+                const surveyResponse = await fetch(`/api/analysis/${analysisId}/survey`);
                 const surveyResult = await surveyResponse.json();
                 
                 if (!surveyResult.success) {
@@ -397,6 +421,7 @@
                 }
                 
                 currentSurvey = surveyResult.data;
+                currentSurveyId = surveyResult.data.id;
                 
                 showStatus('🔓 Decrypting survey...', 'info');
                 
@@ -410,8 +435,8 @@
                 // Get key hash for authorization
                 const keyHash = await createKeyHash(key);
                 
-                // Load responses
-                const responsesResponse = await fetch(`/api/survey/${surveyId}/responses?keyHash=${keyHash}`);
+                // Load responses using analysis ID
+                const responsesResponse = await fetch(`/api/analysis/${analysisId}/responses?keyHash=${keyHash}`);
                 const responsesResult = await responsesResponse.json();
                 
                 if (!responsesResult.success) {
@@ -595,13 +620,67 @@
                 exportedAt: Date.now()
             };
             
-            downloadJson(exportData, `survey-${surveyId}-export.json`);
+            downloadJson(exportData, `survey-${analysisId}-export.json`);
         });
         
         exportCsvBtn.addEventListener('click', () => {
             // This would require decrypting responses again
             // For now, show a simple message
             alert('CSV export would be implemented here. It would include question headers and response data in a spreadsheet-friendly format.');
+        });
+        
+        // Delete survey functionality
+        deleteSurveyBtn.addEventListener('click', async () => {
+            // Double confirmation for destructive action
+            const surveyTitle = surveyData ? surveyData.title : 'this survey';
+            const confirmed = confirm(`Are you sure you want to PERMANENTLY delete "${surveyTitle}" and all its responses?\n\nThis action cannot be undone!`);
+            
+            if (!confirmed) return;
+            
+            const finalConfirm = confirm('This will delete ALL survey data permanently. Type "DELETE" to confirm:');
+            if (!finalConfirm) return;
+            
+            // Prompt for typing DELETE
+            const deleteConfirmation = prompt('Please type "DELETE" to confirm permanent deletion:');
+            if (deleteConfirmation !== 'DELETE') {
+                alert('Deletion cancelled. You must type "DELETE" exactly.');
+                return;
+            }
+            
+            try {
+                deleteSurveyBtn.disabled = true;
+                deleteSurveyBtn.innerHTML = '<span class="loading"></span> Deleting...';
+                
+                showStatus('🗑️ Deleting survey and all responses...', 'info');
+                
+                // Get key hash for authorization
+                const keyHash = await createKeyHash(encryptionKey);
+                
+                // Delete survey using analysis ID
+                const response = await fetch(`/api/analysis/${analysisId}?keyHash=${keyHash}`, {
+                    method: 'DELETE'
+                });
+                
+                const result = await response.json();
+                
+                if (!result.success) {
+                    throw new Error(result.error || 'Failed to delete survey');
+                }
+                
+                showStatus('✅ Survey and all responses deleted successfully', 'success');
+                
+                // Redirect to home page after a delay
+                setTimeout(() => {
+                    window.location.href = '/';
+                }, 2000);
+                
+            } catch (error) {
+                console.error('Delete survey error:', error);
+                showStatus('❌ Failed to delete survey: ' + error.message, 'error');
+            } finally {
+                deleteSurveyBtn.disabled = false;
+                deleteSurveyBtn.innerHTML = '🗑️ Delete Survey';
+            }
         });
         
         function downloadJson(data, filename) {
@@ -626,8 +705,8 @@
             status.style.display = 'none';
         }
         
-        // Check if survey ID is provided and handle URL fragment
-        if (!surveyId) {
+        // Check if analysis ID is provided and handle URL fragment
+        if (!analysisId) {
             showStatus('❌ Invalid analysis URL', 'error');
         } else {
             // Check if password is provided in URL fragment

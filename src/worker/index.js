@@ -6,14 +6,26 @@
 import { 
   createSurvey, 
   getSurvey, 
+  getSurveyByAnalysisId,
   submitResponse, 
   getSurveyResponses, 
+  getSurveyResponsesByAnalysisId,
   getSurveyStats,
-  canAcceptResponses 
+  getSurveyStatsByAnalysisId,
+  canAcceptResponses,
+  deleteSurvey,
+  deleteSurveyByAnalysisId
 } from './database.js';
 
 // Import inlined static assets
 import { getFile, listFiles } from './assets.js';
+
+// Simple ULID-like ID generator for server-side use
+function generateId() {
+  const timestamp = Date.now().toString(36);
+  const randomPart = Math.random().toString(36).substring(2, 15);
+  return (timestamp + randomPart).toUpperCase().substring(0, 26);
+}
 
 // CORS headers
 const corsHeaders = {
@@ -79,6 +91,7 @@ async function handleCreateSurvey(request, env) {
     // Prepare data for database
     const surveyData = {
       id: encryptedSurvey.id,
+      analysisId: generateId(), // Generate separate analysis ID
       title: '', // Will be encrypted in the encryptedData
       description: '',
       questions: encryptedSurvey.encryptedData,
@@ -95,7 +108,9 @@ async function handleCreateSurvey(request, env) {
       success: true,
       data: {
         id: result.id,
-        url: `${request.url.split('/api')[0]}/survey/${result.id}`
+        analysisId: result.analysisId,
+        url: `${request.url.split('/api')[0]}/survey/${result.id}`,
+        analysisUrl: `${request.url.split('/api')[0]}/analyze/${result.analysisId}`
       }
     });
     
@@ -132,6 +147,37 @@ async function handleGetSurvey(surveyId, env) {
     
   } catch (error) {
     console.error('Get survey error:', error);
+    return errorResponse(error.message, 500);
+  }
+}
+
+/**
+ * Handle getting survey data by analysis ID
+ */
+async function handleGetSurveyByAnalysisId(analysisId, env) {
+  try {
+    const survey = await getSurveyByAnalysisId(env.DB, analysisId);
+    
+    if (!survey) {
+      return errorResponse('Survey not found', 404);
+    }
+    
+    // Return encrypted survey data
+    return apiResponse({
+      success: true,
+      data: {
+        id: survey.id,
+        salt: survey.salt,
+        encryptedData: survey.questions,
+        keyHash: survey.creatorKeyHash,
+        createdAt: survey.createdAt,
+        expiresAt: survey.expiresAt,
+        maxResponses: survey.maxResponses
+      }
+    });
+    
+  } catch (error) {
+    console.error('Get survey by analysis ID error:', error);
     return errorResponse(error.message, 500);
   }
 }
@@ -214,6 +260,100 @@ async function handleGetResponses(surveyId, request, env) {
 }
 
 /**
+ * Handle getting survey responses by analysis ID (creator only)
+ */
+async function handleGetResponsesByAnalysisId(analysisId, request, env) {
+  try {
+    const url = new URL(request.url);
+    const keyHash = url.searchParams.get('keyHash');
+    
+    if (!keyHash) {
+      return errorResponse('Missing authorization key hash', 401);
+    }
+    
+    const responses = await getSurveyResponsesByAnalysisId(env.DB, analysisId, keyHash);
+    const stats = await getSurveyStatsByAnalysisId(env.DB, analysisId, keyHash);
+    
+    return apiResponse({
+      success: true,
+      data: {
+        responses,
+        stats
+      }
+    });
+    
+  } catch (error) {
+    console.error('Get responses by analysis ID error:', error);
+    
+    if (error.message.includes('Unauthorized')) {
+      return errorResponse(error.message, 401);
+    }
+    
+    return errorResponse(error.message, 500);
+  }
+}
+
+/**
+ * Handle survey deletion by analysis ID (creator only)
+ */
+async function handleDeleteSurveyByAnalysisId(analysisId, request, env) {
+  try {
+    const url = new URL(request.url);
+    const keyHash = url.searchParams.get('keyHash');
+    
+    if (!keyHash) {
+      return errorResponse('Missing authorization key hash', 401);
+    }
+    
+    const result = await deleteSurveyByAnalysisId(env.DB, analysisId, keyHash);
+    
+    return apiResponse({
+      success: true,
+      data: result
+    });
+    
+  } catch (error) {
+    console.error('Delete survey by analysis ID error:', error);
+    
+    if (error.message.includes('Unauthorized') || error.message.includes('not found')) {
+      return errorResponse(error.message, 401);
+    }
+    
+    return errorResponse(error.message, 500);
+  }
+}
+
+/**
+ * Handle survey deletion (creator only)
+ */
+async function handleDeleteSurvey(surveyId, request, env) {
+  try {
+    const url = new URL(request.url);
+    const keyHash = url.searchParams.get('keyHash');
+    
+    if (!keyHash) {
+      return errorResponse('Missing authorization key hash', 401);
+    }
+    
+    const result = await deleteSurvey(env.DB, surveyId, keyHash);
+    
+    return apiResponse({
+      success: true,
+      data: result
+    });
+    
+  } catch (error) {
+    console.error('Delete survey error:', error);
+    
+    if (error.message.includes('Unauthorized') || error.message.includes('not found')) {
+      return errorResponse(error.message, 401);
+    }
+    
+    return errorResponse(error.message, 500);
+  }
+}
+
+/**
  * Route requests
  */
 async function handleRequest(request, env) {
@@ -249,6 +389,31 @@ async function handleRequest(request, env) {
     const responsesMatch = path.match(/^\/api\/survey\/([a-zA-Z0-9]+)\/responses$/);
     if (responsesMatch && method === 'GET') {
       return handleGetResponses(responsesMatch[1], request, env);
+    }
+    
+    // DELETE /api/survey/:id - Delete survey (creator only)
+    const deleteMatch = path.match(/^\/api\/survey\/([a-zA-Z0-9]+)$/);
+    if (deleteMatch && method === 'DELETE') {
+      return handleDeleteSurvey(deleteMatch[1], request, env);
+    }
+    
+    // Analysis endpoints (using analysis ID)
+    // GET /api/analysis/:id/survey - Get survey data by analysis ID
+    const analysisSurveyMatch = path.match(/^\/api\/analysis\/([a-zA-Z0-9]+)\/survey$/);
+    if (analysisSurveyMatch && method === 'GET') {
+      return handleGetSurveyByAnalysisId(analysisSurveyMatch[1], env);
+    }
+    
+    // GET /api/analysis/:id/responses - Get responses by analysis ID (creator only)
+    const analysisResponsesMatch = path.match(/^\/api\/analysis\/([a-zA-Z0-9]+)\/responses$/);
+    if (analysisResponsesMatch && method === 'GET') {
+      return handleGetResponsesByAnalysisId(analysisResponsesMatch[1], request, env);
+    }
+    
+    // DELETE /api/analysis/:id - Delete survey by analysis ID (creator only)
+    const analysisDeleteMatch = path.match(/^\/api\/analysis\/([a-zA-Z0-9]+)$/);
+    if (analysisDeleteMatch && method === 'DELETE') {
+      return handleDeleteSurveyByAnalysisId(analysisDeleteMatch[1], request, env);
     }
     
     return errorResponse('API endpoint not found', 404);

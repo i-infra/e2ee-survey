@@ -8,6 +8,7 @@
 export async function createSurvey(db, surveyData) {
   const {
     id,
+    analysisId,
     title,
     description,
     questions,
@@ -20,13 +21,14 @@ export async function createSurvey(db, surveyData) {
   
   const stmt = db.prepare(`
     INSERT INTO surveys (
-      id, title, description, questions, salt, 
+      id, analysis_id, title, description, questions, salt, 
       created_at, expires_at, max_responses, creator_key_hash
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
   
   const result = await stmt.bind(
     id,
+    analysisId,
     title,
     description,
     new Uint8Array(questions),
@@ -41,7 +43,7 @@ export async function createSurvey(db, surveyData) {
     throw new Error('Failed to create survey');
   }
   
-  return { id, success: true };
+  return { id, analysisId, success: true };
 }
 
 /**
@@ -126,7 +128,60 @@ export async function submitResponse(db, responseData) {
 }
 
 /**
- * Get all responses for a survey
+ * Get a survey by analysis ID (for analysis endpoints)
+ */
+export async function getSurveyByAnalysisId(db, analysisId) {
+  const survey = await db.prepare(`
+    SELECT * FROM surveys WHERE analysis_id = ?
+  `).bind(analysisId).first();
+  
+  if (!survey) {
+    return null;
+  }
+  
+  return {
+    id: survey.id,
+    analysisId: survey.analysis_id,
+    title: survey.title,
+    description: survey.description,
+    questions: Array.from(new Uint8Array(survey.questions)),
+    salt: Array.from(new Uint8Array(survey.salt)),
+    createdAt: survey.created_at,
+    expiresAt: survey.expires_at,
+    maxResponses: survey.max_responses,
+    creatorKeyHash: survey.creator_key_hash
+  };
+}
+
+/**
+ * Get all responses for a survey (by analysis ID)
+ */
+export async function getSurveyResponsesByAnalysisId(db, analysisId, creatorKeyHash) {
+  // Verify the requester is the survey creator
+  const survey = await getSurveyByAnalysisId(db, analysisId);
+  
+  if (!survey) {
+    throw new Error('Survey not found');
+  }
+  
+  if (survey.creatorKeyHash !== creatorKeyHash) {
+    throw new Error('Unauthorized - incorrect creator key');
+  }
+  
+  // Get all responses for this survey
+  const responses = await db.prepare(`
+    SELECT * FROM responses WHERE survey_id = ? ORDER BY submitted_at DESC
+  `).bind(survey.id).all();
+  
+  return responses.results.map(response => ({
+    id: response.id,
+    answers: Array.from(new Uint8Array(response.answers)),
+    submittedAt: response.submitted_at
+  }));
+}
+
+/**
+ * Get all responses for a survey (by survey ID - for backwards compatibility)
  */
 export async function getSurveyResponses(db, surveyId, creatorKeyHash) {
   // Verify the requester is the survey creator
@@ -166,7 +221,36 @@ export async function getResponseCount(db, surveyId) {
 }
 
 /**
- * Get survey statistics
+ * Get survey statistics (by analysis ID)
+ */
+export async function getSurveyStatsByAnalysisId(db, analysisId, creatorKeyHash) {
+  // Verify the requester is the survey creator
+  const survey = await getSurveyByAnalysisId(db, analysisId);
+  
+  if (!survey) {
+    throw new Error('Survey not found');
+  }
+  
+  if (survey.creatorKeyHash !== creatorKeyHash) {
+    throw new Error('Unauthorized - incorrect creator key');
+  }
+  
+  const responseCount = await getResponseCount(db, survey.id);
+  
+  return {
+    surveyId: survey.id,
+    analysisId: survey.analysisId,
+    responseCount,
+    createdAt: survey.createdAt,
+    expiresAt: survey.expiresAt,
+    maxResponses: survey.maxResponses,
+    isExpired: survey.expiresAt ? Date.now() > survey.expiresAt : false,
+    isAtLimit: survey.maxResponses ? responseCount >= survey.maxResponses : false
+  };
+}
+
+/**
+ * Get survey statistics (by survey ID - for backwards compatibility)
  */
 export async function getSurveyStats(db, surveyId, creatorKeyHash) {
   // Verify the requester is the survey creator
@@ -213,4 +297,78 @@ export async function cleanupExpiredSurveys(db, maxAge = 30 * 24 * 60 * 60 * 100
   `).bind(cutoffTime).run();
   
   return { deletedCount: result.changes };
+}
+
+/**
+ * Delete a survey and all its responses (creator only, by analysis ID)
+ */
+export async function deleteSurveyByAnalysisId(db, analysisId, creatorKeyHash) {
+  // First verify the creator and get survey ID
+  const survey = await db.prepare(`
+    SELECT id, creator_key_hash FROM surveys WHERE analysis_id = ?
+  `).bind(analysisId).first();
+  
+  if (!survey) {
+    throw new Error('Survey not found');
+  }
+  
+  if (survey.creator_key_hash !== creatorKeyHash) {
+    throw new Error('Unauthorized - only survey creator can delete');
+  }
+  
+  // Delete responses first (foreign key constraint)
+  const responseResult = await db.prepare(`
+    DELETE FROM responses WHERE survey_id = ?
+  `).bind(survey.id).run();
+  
+  // Delete the survey
+  const surveyResult = await db.prepare(`
+    DELETE FROM surveys WHERE id = ?
+  `).bind(survey.id).run();
+  
+  if (surveyResult.changes === 0) {
+    throw new Error('Survey not found or already deleted');
+  }
+  
+  return {
+    deletedSurvey: true,
+    deletedResponses: responseResult.changes
+  };
+}
+
+/**
+ * Delete a survey and all its responses (creator only, by survey ID - for backwards compatibility)
+ */
+export async function deleteSurvey(db, surveyId, creatorKeyHash) {
+  // First verify the creator
+  const survey = await db.prepare(`
+    SELECT creator_key_hash FROM surveys WHERE id = ?
+  `).bind(surveyId).first();
+  
+  if (!survey) {
+    throw new Error('Survey not found');
+  }
+  
+  if (survey.creator_key_hash !== creatorKeyHash) {
+    throw new Error('Unauthorized - only survey creator can delete');
+  }
+  
+  // Delete responses first (foreign key constraint)
+  const responseResult = await db.prepare(`
+    DELETE FROM responses WHERE survey_id = ?
+  `).bind(surveyId).run();
+  
+  // Delete the survey
+  const surveyResult = await db.prepare(`
+    DELETE FROM surveys WHERE id = ?
+  `).bind(surveyId).run();
+  
+  if (surveyResult.changes === 0) {
+    throw new Error('Survey not found or already deleted');
+  }
+  
+  return {
+    deletedSurvey: true,
+    deletedResponses: responseResult.changes
+  };
 }
