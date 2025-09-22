@@ -274,6 +274,7 @@
         const status = document.getElementById('status');
         
         let currentSurvey = null;
+        let decryptedSurvey = null;
         let encryptionKey = null;
         
         // Check URL fragment for password
@@ -350,6 +351,7 @@
                 showStatus('🔓 Decrypting survey...', 'info');
                 
                 const { surveyData, key } = await decryptSurvey(currentSurvey, password);
+                decryptedSurvey = surveyData;
                 encryptionKey = key;
                 
                 // Render survey
@@ -446,7 +448,7 @@
                 const formData = new FormData(responseForm);
                 const responses = {};
                 
-                currentSurvey.questions.forEach(question => {
+                decryptedSurvey.questions.forEach(question => {
                     const value = formData.get(question.id);
                     
                     if (question.type === 'yes_no') {
@@ -463,7 +465,7 @@
                 });
                 
                 // Validate responses
-                const validation = validateResponses(currentSurvey, responses);
+                const validation = validateResponses(decryptedSurvey, responses);
                 if (!validation.valid) {
                     throw new Error(validation.errors.join(', '));
                 }
