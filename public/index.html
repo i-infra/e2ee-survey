@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Encrypted Survey Tool</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        h1 {
+            color: #4a5568;
+            margin-bottom: 20px;
+            font-size: 3em;
+            font-weight: 300;
+        }
+        
+        .subtitle {
+            color: #718096;
+            font-size: 1.2em;
+            margin-bottom: 40px;
+        }
+        
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            margin: 40px 0;
+        }
+        
+        .feature {
+            padding: 30px;
+            background: #f7fafc;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .feature-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+        }
+        
+        .feature h3 {
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+        
+        .feature p {
+            color: #4a5568;
+            line-height: 1.6;
+        }
+        
+        .cta-section {
+            margin: 50px 0;
+        }
+        
+        .cta-button {
+            display: inline-block;
+            padding: 20px 40px;
+            background: #48bb78;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 1.2em;
+            font-weight: 600;
+            margin: 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .cta-button:hover {
+            background: #38a169;
+            transform: translateY(-2px);
+        }
+        
+        .secondary-button {
+            background: #4299e1;
+        }
+        
+        .secondary-button:hover {
+            background: #3182ce;
+        }
+        
+        .info-section {
+            background: #e6fffa;
+            border: 1px solid #81e6d9;
+            border-radius: 8px;
+            padding: 30px;
+            margin: 40px 0;
+            text-align: left;
+        }
+        
+        .info-section h3 {
+            color: #234e52;
+            margin-bottom: 15px;
+        }
+        
+        .info-section ul {
+            color: #234e52;
+            line-height: 1.8;
+        }
+        
+        .footer {
+            margin-top: 50px;
+            padding-top: 30px;
+            border-top: 1px solid #e2e8f0;
+            color: #718096;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 Encrypted Survey Tool</h1>
+        <p class="subtitle">Create and share completely private surveys with end-to-end encryption</p>
+        
+        <div class="features">
+            <div class="feature">
+                <div class="feature-icon">🔒</div>
+                <h3>End-to-End Encrypted</h3>
+                <p>Your survey questions and responses are encrypted before they leave your device. Even we can't see them.</p>
+            </div>
+            
+            <div class="feature">
+                <div class="feature-icon">👤</div>
+                <h3>Anonymous & Private</h3>
+                <p>No accounts required. No tracking. No data mining. Complete respondent privacy.</p>
+            </div>
+            
+            <div class="feature">
+                <div class="feature-icon">📝</div>
+                <h3>Simple Markdown Format</h3>
+                <p>Create surveys using simple markdown syntax. No complex form builders needed.</p>
+            </div>
+        </div>
+        
+        <div class="cta-section">
+            <a href="/create" class="cta-button">
+                ✨ Create New Survey
+            </a>
+            <br>
+            <a href="#how-it-works" class="cta-button secondary-button">
+                📖 How It Works
+            </a>
+        </div>
+        
+        <div class="info-section" id="how-it-works">
+            <h3>🛡️ How End-to-End Encryption Works</h3>
+            <ul>
+                <li><strong>Survey Creation:</strong> You write your survey in markdown and set a password</li>
+                <li><strong>Client-Side Encryption:</strong> Your survey is encrypted in your browser before uploading</li>
+                <li><strong>Secure Storage:</strong> Only encrypted data is stored on our servers</li>
+                <li><strong>Response Collection:</strong> Respondents decrypt the survey, answer, and re-encrypt their responses</li>
+                <li><strong>Analysis:</strong> Only you can decrypt and view the responses with your password</li>
+            </ul>
+            
+            <h3>📋 Survey Format Example</h3>
+            <pre style="background: white; padding: 15px; border-radius: 4px; overflow-x: auto;"># Customer Feedback Survey
+We'd love to hear your thoughts about our service.
+
+## Questions
+
+- **yes/no** Are you satisfied with our service?
+- **text** What could we improve?
+- **yes/no** Would you recommend us to a friend?
+- **text** Any additional comments?</pre>
+        </div>
+        
+        <div class="info-section">
+            <h3>🔐 Privacy Guarantees</h3>
+            <ul>
+                <li>Zero-knowledge architecture - we cannot decrypt your data</li>
+                <li>No user accounts or personal information required</li>
+                <li>Surveys are automatically cleaned up after 30 days</li>
+                <li>All encryption happens in your browser using proven algorithms</li>
+                <li>Open source and auditable code</li>
+            </ul>
+        </div>
+        
+        <div class="footer">
+            <p>
+                <strong>Privacy First:</strong> This tool was built as an alternative to traditional survey platforms 
+                that require accounts and may access your data. Here, privacy is not optional - it's built into 
+                the architecture.
+            </p>
+            <br>
+            <p>
+                <strong>Technical Details:</strong> Uses TweetNaCl for encryption, Argon2i for key derivation, 
+                and runs on Cloudflare Workers with D1 database storage.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

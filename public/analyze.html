@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Survey Analysis</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tweetnacl/1.0.2/nacl-fast.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/argon2-browser/1.18.0/argon2-bundled.min.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #4a5568;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            font-weight: 300;
+        }
+        
+        .password-prompt {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #4a5568;
+        }
+        
+        input[type="password"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+            box-sizing: border-box;
+        }
+        
+        input[type="password"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        button {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .primary-btn {
+            background: #48bb78;
+            color: white;
+            width: 100%;
+        }
+        
+        .primary-btn:hover:not(:disabled) {
+            background: #38a169;
+        }
+        
+        .secondary-btn {
+            background: #e2e8f0;
+            color: #4a5568;
+            margin-top: 10px;
+        }
+        
+        .secondary-btn:hover {
+            background: #cbd5e0;
+        }
+        
+        button:disabled {
+            background: #cbd5e0;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+        
+        .status {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 6px;
+            text-align: center;
+            display: none;
+        }
+        
+        .status.success {
+            background: #c6f6d5;
+            color: #22543d;
+            border: 1px solid #9ae6b4;
+        }
+        
+        .status.error {
+            background: #fed7d7;
+            color: #742a2a;
+            border: 1px solid #fc8181;
+        }
+        
+        .status.info {
+            background: #bee3f8;
+            color: #2a4365;
+            border: 1px solid #63b3ed;
+        }
+        
+        .analysis-content {
+            display: none;
+        }
+        
+        .survey-info {
+            background: #e6fffa;
+            border: 1px solid #81e6d9;
+            border-radius: 6px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #2d3748;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            color: #4a5568;
+            font-size: 0.9em;
+        }
+        
+        .question-analysis {
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .question-title {
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+        
+        .yes-no-results {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+        
+        .result-bar {
+            flex: 1;
+            height: 40px;
+            background: #e2e8f0;
+            border-radius: 6px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .result-fill {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            transition: width 0.5s ease;
+        }
+        
+        .yes-fill {
+            background: #48bb78;
+        }
+        
+        .no-fill {
+            background: #ed8936;
+        }
+        
+        .text-responses {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 15px;
+            background: white;
+        }
+        
+        .text-response {
+            padding: 10px;
+            margin-bottom: 10px;
+            background: #f7fafc;
+            border-radius: 4px;
+            border-left: 3px solid #667eea;
+        }
+        
+        .text-response:last-child {
+            margin-bottom: 0;
+        }
+        
+        .export-section {
+            border-top: 1px solid #e2e8f0;
+            padding-top: 30px;
+            margin-top: 30px;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #e2e8f0;
+            border-radius: 50%;
+            border-top-color: #667eea;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #4a5568;
+        }
+        
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 Survey Analysis</h1>
+        
+        <div class="password-prompt" id="passwordPrompt">
+            <p>Enter the survey password to view encrypted responses and analytics.</p>
+            
+            <div class="form-group">
+                <label for="surveyPassword">Survey Password:</label>
+                <input type="password" id="surveyPassword" placeholder="Enter the survey password" required>
+            </div>
+            
+            <button class="primary-btn" id="unlockBtn">🔓 Access Analysis</button>
+        </div>
+        
+        <div class="analysis-content" id="analysisContent">
+            <div class="survey-info" id="surveyInfo">
+                <h2 id="surveyTitle">Survey Title</h2>
+                <p id="surveyDescription">Survey description...</p>
+            </div>
+            
+            <div class="stats-grid" id="statsGrid">
+                <div class="stat-card">
+                    <div class="stat-value" id="responseCount">0</div>
+                    <div class="stat-label">Total Responses</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="createdDate">-</div>
+                    <div class="stat-label">Created</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="statusIndicator">Active</div>
+                    <div class="stat-label">Status</div>
+                </div>
+            </div>
+            
+            <div id="questionsAnalysis"></div>
+            
+            <div class="export-section">
+                <h3>📤 Export Data</h3>
+                <p>Download your survey responses in different formats.</p>
+                <button class="secondary-btn" id="exportJsonBtn">📄 Export as JSON</button>
+                <button class="secondary-btn" id="exportCsvBtn">📊 Export as CSV</button>
+            </div>
+        </div>
+        
+        <div class="status" id="status"></div>
+    </div>
+
+    <script type="module">
+        import { initCrypto, decryptSurvey, decryptData, createKeyHash } from '../src/shared/crypto.js';
+        
+        // Initialize crypto libraries
+        initCrypto(nacl, argon2);
+        
+        // Get survey ID from URL
+        const surveyId = window.location.pathname.split('/analyze/')[1];
+        
+        // DOM elements
+        const passwordPrompt = document.getElementById('passwordPrompt');
+        const analysisContent = document.getElementById('analysisContent');
+        const surveyPassword = document.getElementById('surveyPassword');
+        const unlockBtn = document.getElementById('unlockBtn');
+        const surveyInfo = document.getElementById('surveyInfo');
+        const surveyTitle = document.getElementById('surveyTitle');
+        const surveyDescription = document.getElementById('surveyDescription');
+        const responseCount = document.getElementById('responseCount');
+        const createdDate = document.getElementById('createdDate');
+        const statusIndicator = document.getElementById('statusIndicator');
+        const questionsAnalysis = document.getElementById('questionsAnalysis');
+        const exportJsonBtn = document.getElementById('exportJsonBtn');
+        const exportCsvBtn = document.getElementById('exportCsvBtn');
+        const status = document.getElementById('status');
+        
+        let currentSurvey = null;
+        let surveyData = null;
+        let encryptionKey = null;
+        let responsesData = null;
+        
+        // Check URL fragment for password
+        async function checkUrlFragment() {
+            const hash = window.location.hash;
+            if (!hash || hash.length <= 1) return false;
+            
+            // Remove the # and decode
+            const password = decodeURIComponent(hash.substring(1));
+            
+            if (!password) return false;
+            
+            try {
+                // Set the password field
+                surveyPassword.value = password;
+                
+                // Show auto-unlock info
+                showStatus('🔗 Password loaded from URL - accessing analysis...', 'info');
+                
+                // Auto-unlock after a short delay
+                setTimeout(() => {
+                    unlockBtn.click();
+                }, 1000);
+                
+                // Clear the URL fragment for security
+                history.replaceState(null, null, window.location.pathname + window.location.search);
+                
+                return true;
+            } catch (error) {
+                console.error('URL fragment error:', error);
+                return false;
+            }
+        }
+        
+        // Load and unlock survey
+        unlockBtn.addEventListener('click', async () => {
+            try {
+                unlockBtn.disabled = true;
+                unlockBtn.innerHTML = '<span class="loading"></span> Loading...';
+                
+                const password = surveyPassword.value;
+                if (!password) {
+                    throw new Error('Please enter a password');
+                }
+                
+                showStatus('📡 Loading survey data...', 'info');
+                
+                // Load survey
+                const surveyResponse = await fetch(`/api/survey/${surveyId}`);
+                const surveyResult = await surveyResponse.json();
+                
+                if (!surveyResult.success) {
+                    throw new Error(surveyResult.error || 'Failed to load survey');
+                }
+                
+                currentSurvey = surveyResult.data;
+                
+                showStatus('🔓 Decrypting survey...', 'info');
+                
+                // Decrypt survey
+                const { surveyData: decryptedSurvey, key } = await decryptSurvey(currentSurvey, password);
+                surveyData = decryptedSurvey;
+                encryptionKey = key;
+                
+                showStatus('📊 Loading responses...', 'info');
+                
+                // Get key hash for authorization
+                const keyHash = await createKeyHash(key);
+                
+                // Load responses
+                const responsesResponse = await fetch(`/api/survey/${surveyId}/responses?keyHash=${keyHash}`);
+                const responsesResult = await responsesResponse.json();
+                
+                if (!responsesResult.success) {
+                    throw new Error(responsesResult.error || 'Failed to load responses');
+                }
+                
+                responsesData = responsesResult.data;
+                
+                showStatus('🔐 Decrypting responses...', 'info');
+                
+                // Decrypt all responses
+                const decryptedResponses = [];
+                for (const response of responsesData.responses) {
+                    try {
+                        const answers = decryptData(new Uint8Array(response.answers), key);
+                        decryptedResponses.push({
+                            id: response.id,
+                            answers,
+                            submittedAt: response.submittedAt
+                        });
+                    } catch (error) {
+                        console.warn('Failed to decrypt response:', response.id, error);
+                    }
+                }
+                
+                // Render analysis
+                renderAnalysis(surveyData, decryptedResponses, responsesData.stats);
+                
+                // Show analysis content
+                passwordPrompt.style.display = 'none';
+                analysisContent.style.display = 'block';
+                hideStatus();
+                
+            } catch (error) {
+                console.error('Analysis error:', error);
+                showStatus('❌ ' + error.message, 'error');
+            } finally {
+                unlockBtn.disabled = false;
+                unlockBtn.innerHTML = '🔓 Access Analysis';
+            }
+        });
+        
+        // Allow Enter key to unlock
+        surveyPassword.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                unlockBtn.click();
+            }
+        });
+        
+        // Render analysis
+        function renderAnalysis(survey, responses, stats) {
+            // Set title and basic info
+            document.title = survey.title + ' - Analysis';
+            surveyTitle.textContent = survey.title;
+            surveyDescription.textContent = survey.description || 'No description provided';
+            
+            // Stats
+            responseCount.textContent = responses.length;
+            createdDate.textContent = new Date(stats.createdAt).toLocaleDateString();
+            
+            let statusText = 'Active';
+            if (stats.isExpired) statusText = 'Expired';
+            else if (stats.isAtLimit) statusText = 'Full';
+            statusIndicator.textContent = statusText;
+            
+            // Question analysis
+            questionsAnalysis.innerHTML = '';
+            
+            if (responses.length === 0) {
+                questionsAnalysis.innerHTML = `
+                    <div class="empty-state">
+                        <h3>📭 No Responses Yet</h3>
+                        <p>Share your survey URL to start collecting responses!</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            survey.questions.forEach((question, index) => {
+                const questionDiv = document.createElement('div');
+                questionDiv.className = 'question-analysis';
+                
+                const titleDiv = document.createElement('div');
+                titleDiv.className = 'question-title';
+                titleDiv.textContent = `${index + 1}. ${question.text}`;
+                questionDiv.appendChild(titleDiv);
+                
+                if (question.type === 'yes_no') {
+                    renderYesNoAnalysis(questionDiv, question, responses);
+                } else if (question.type === 'text') {
+                    renderTextAnalysis(questionDiv, question, responses);
+                }
+                
+                questionsAnalysis.appendChild(questionDiv);
+            });
+        }
+        
+        // Render yes/no question analysis
+        function renderYesNoAnalysis(container, question, responses) {
+            const validResponses = responses.filter(r => 
+                r.answers[question.id] && 
+                r.answers[question.id].value !== null && 
+                r.answers[question.id].value !== undefined
+            );
+            
+            const yesCount = validResponses.filter(r => r.answers[question.id].value === true).length;
+            const noCount = validResponses.filter(r => r.answers[question.id].value === false).length;
+            const total = validResponses.length;
+            
+            if (total === 0) {
+                container.innerHTML += '<p>No responses for this question.</p>';
+                return;
+            }
+            
+            const yesPercent = ((yesCount / total) * 100).toFixed(1);
+            const noPercent = ((noCount / total) * 100).toFixed(1);
+            
+            const resultsDiv = document.createElement('div');
+            resultsDiv.className = 'yes-no-results';
+            
+            resultsDiv.innerHTML = `
+                <div style="flex: 0 0 60px; text-align: center;">
+                    <strong>✅ Yes</strong><br>
+                    <small>${yesCount} (${yesPercent}%)</small>
+                </div>
+                <div class="result-bar">
+                    <div class="result-fill yes-fill" style="width: ${yesPercent}%">
+                        ${yesPercent}%
+                    </div>
+                </div>
+                <div style="flex: 0 0 60px; text-align: center;">
+                    <strong>❌ No</strong><br>
+                    <small>${noCount} (${noPercent}%)</small>
+                </div>
+                <div class="result-bar">
+                    <div class="result-fill no-fill" style="width: ${noPercent}%">
+                        ${noPercent}%
+                    </div>
+                </div>
+            `;
+            
+            container.appendChild(resultsDiv);
+        }
+        
+        // Render text question analysis
+        function renderTextAnalysis(container, question, responses) {
+            const validResponses = responses.filter(r => 
+                r.answers[question.id] && 
+                r.answers[question.id].value && 
+                r.answers[question.id].value.trim()
+            );
+            
+            if (validResponses.length === 0) {
+                container.innerHTML += '<p>No responses for this question.</p>';
+                return;
+            }
+            
+            const responsesDiv = document.createElement('div');
+            responsesDiv.className = 'text-responses';
+            
+            validResponses.forEach(response => {
+                const responseDiv = document.createElement('div');
+                responseDiv.className = 'text-response';
+                responseDiv.textContent = response.answers[question.id].value;
+                responsesDiv.appendChild(responseDiv);
+            });
+            
+            container.appendChild(responsesDiv);
+        }
+        
+        // Export functionality
+        exportJsonBtn.addEventListener('click', () => {
+            const exportData = {
+                survey: surveyData,
+                responses: responsesData.responses.map(r => ({
+                    id: r.id,
+                    submittedAt: r.submittedAt,
+                    encryptedAnswers: r.answers
+                })),
+                stats: responsesData.stats,
+                exportedAt: Date.now()
+            };
+            
+            downloadJson(exportData, `survey-${surveyId}-export.json`);
+        });
+        
+        exportCsvBtn.addEventListener('click', () => {
+            // This would require decrypting responses again
+            // For now, show a simple message
+            alert('CSV export would be implemented here. It would include question headers and response data in a spreadsheet-friendly format.');
+        });
+        
+        function downloadJson(data, filename) {
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+        
+        function showStatus(message, type) {
+            status.textContent = message;
+            status.className = `status ${type}`;
+            status.style.display = 'block';
+        }
+        
+        function hideStatus() {
+            status.style.display = 'none';
+        }
+        
+        // Check if survey ID is provided and handle URL fragment
+        if (!surveyId) {
+            showStatus('❌ Invalid analysis URL', 'error');
+        } else {
+            // Check if password is provided in URL fragment
+            checkUrlFragment();
+        }
+    </script>
+</body>
+</html>

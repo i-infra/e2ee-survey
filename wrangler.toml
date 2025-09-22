@@ -1,0 +1,13 @@
+name = "encrypted-survey"
+main = "src/worker/index.js"
+compatibility_date = "2024-08-14"
+
+# Local development uses a local SQLite database
+[[d1_databases]]
+binding = "DB"
+database_name = "encrypted-survey-db"
+database_id = "00000000-0000-0000-0000-000000000000"
+preview_database_id = "local"
+
+[vars]
+ENVIRONMENT = "development"

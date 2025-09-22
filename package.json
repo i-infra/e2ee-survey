@@ -1,0 +1,27 @@
+{
+  "name": "encrypted-survey",
+  "version": "1.0.0",
+  "description": "End-to-end encrypted survey tool on Cloudflare Workers",
+  "main": "src/worker/index.js",
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build-assets.js",
+    "dev": "npm run build && wrangler dev --local",
+    "dev:docker": "./scripts/dev.sh",
+    "deploy": "npm run build && wrangler deploy",
+    "deploy:assets": "npm run build",
+    "db:init": "wrangler d1 execute encrypted-survey-db --local --file=./schemas/001-initial.sql",
+    "db:reset": "wrangler d1 execute encrypted-survey-db --local --command=\"DROP TABLE IF EXISTS surveys; DROP TABLE IF EXISTS responses;\" && npm run db:init"
+  },
+  "devDependencies": {
+    "wrangler": "^4.31.0"
+  },
+  "keywords": [
+    "encryption",
+    "survey",
+    "privacy",
+    "cloudflare-workers"
+  ],
+  "author": "Anonymous",
+  "license": "MIT"
+}
