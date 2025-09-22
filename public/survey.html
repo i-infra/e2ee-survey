@@ -13,7 +13,7 @@
             max-width: 800px;
             margin: 0 auto;
             padding: 20px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #80ab82 0%, #778472 100%);
             min-height: 100vh;
             color: #333;
         }
@@ -27,7 +27,7 @@
         
         h1 {
             text-align: center;
-            color: #4a5568;
+            color: #778472;
             margin-bottom: 30px;
             font-size: 2.5em;
             font-weight: 300;
@@ -46,7 +46,7 @@
             display: block;
             margin-bottom: 8px;
             font-weight: 600;
-            color: #4a5568;
+            color: #778472;
         }
         
         input[type="password"], input[type="radio"], textarea {
@@ -71,7 +71,7 @@
         
         input[type="password"]:focus, textarea:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: #7dcd85;
         }
         
         .question {
@@ -105,7 +105,7 @@
         }
         
         .radio-option:hover {
-            background: #e2e8f0;
+            background: #bac7be;
         }
         
         .radio-option input[type="radio"] {
@@ -123,27 +123,27 @@
         }
         
         .primary-btn {
-            background: #48bb78;
+            background: #7dcd85;
             color: white;
             width: 100%;
         }
         
         .primary-btn:hover:not(:disabled) {
-            background: #38a169;
+            background: #80ab82;
         }
         
         .secondary-btn {
-            background: #e2e8f0;
-            color: #4a5568;
+            background: #bac7be;
+            color: #778472;
             width: 100%;
         }
         
         .secondary-btn:hover {
-            background: #cbd5e0;
+            background: #c2e1c2;
         }
         
         button:disabled {
-            background: #cbd5e0;
+            background: #c2e1c2;
             cursor: not-allowed;
             opacity: 0.6;
         }
@@ -157,9 +157,9 @@
         }
         
         .status.success {
-            background: #c6f6d5;
-            color: #22543d;
-            border: 1px solid #9ae6b4;
+            background: #c2e1c2;
+            color: #778472;
+            border: 1px solid #7dcd85;
         }
         
         .status.error {
@@ -204,11 +204,11 @@
         .success-message {
             text-align: center;
             padding: 40px;
-            color: #22543d;
+            color: #778472;
         }
         
         .success-message h2 {
-            color: #22543d;
+            color: #778472;
             margin-bottom: 20px;
         }
         
@@ -219,7 +219,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>🔐 Encrypted Survey</h1>
+        <h1>Encrypted Survey</h1>
         
         <div class="password-prompt" id="passwordPrompt">
             <p>This survey is end-to-end encrypted. Please enter the password to access the survey questions.</p>
@@ -229,7 +229,7 @@
                 <input type="password" id="surveyPassword" placeholder="Enter the survey password" required>
             </div>
             
-            <button class="primary-btn" id="unlockBtn">🔓 Unlock Survey</button>
+            <button class="primary-btn" id="unlockBtn">Unlock Survey</button>
         </div>
         
         <div class="survey-content" id="surveyContent">
@@ -243,7 +243,7 @@
         </div>
         
         <div class="success-message hidden" id="successMessage">
-            <h2>✅ Thank You!</h2>
+            <h2>Thank You!</h2>
             <p>Your response has been submitted successfully and encrypted before storage.</p>
             <p>Your privacy is protected - even the survey administrators cannot see your individual response without the encryption key.</p>
         </div>
@@ -333,7 +333,7 @@
                 
             } catch (error) {
                 console.error('Load survey error:', error);
-                showStatus('❌ ' + error.message, 'error');
+                showStatus('Error: ' + error.message, 'error');
             }
         }
         
@@ -348,7 +348,7 @@
                     throw new Error('Please enter a password');
                 }
                 
-                showStatus('🔓 Decrypting survey...', 'info');
+                showStatus('Decrypting survey...', 'info');
                 
                 const { surveyData, key } = await decryptSurvey(currentSurvey, password);
                 decryptedSurvey = surveyData;
@@ -364,10 +364,10 @@
                 
             } catch (error) {
                 console.error('Unlock error:', error);
-                showStatus('❌ ' + error.message, 'error');
+                showStatus('Error: ' + error.message, 'error');
             } finally {
                 unlockBtn.disabled = false;
-                unlockBtn.innerHTML = '🔓 Unlock Survey';
+                unlockBtn.innerHTML = 'Unlock Survey';
             }
         });
         
@@ -409,7 +409,7 @@
                     yesLabel.className = 'radio-option';
                     yesLabel.innerHTML = `
                         <input type="radio" name="${question.id}" value="true" required>
-                        <span>✅ Yes</span>
+                        <span>Yes</span>
                     `;
                     
                     // No option
@@ -417,7 +417,7 @@
                     noLabel.className = 'radio-option';
                     noLabel.innerHTML = `
                         <input type="radio" name="${question.id}" value="false" required>
-                        <span>❌ No</span>
+                        <span>No</span>
                     `;
                     
                     optionsDiv.appendChild(yesLabel);
@@ -470,7 +470,7 @@
                     throw new Error(validation.errors.join(', '));
                 }
                 
-                showStatus('🔒 Encrypting response...', 'info');
+                showStatus('Encrypting response...', 'info');
                 
                 // Encrypt responses
                 const encryptedAnswers = encryptData(responses, encryptionKey);
@@ -504,7 +504,7 @@
                 
             } catch (error) {
                 console.error('Submit error:', error);
-                showStatus('❌ ' + error.message, 'error');
+                showStatus('Error: ' + error.message, 'error');
             } finally {
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = '📤 Submit Response';
@@ -525,7 +525,7 @@
         if (surveyId) {
             loadSurvey();
         } else {
-            showStatus('❌ Invalid survey URL', 'error');
+            showStatus('Error: Invalid survey URL', 'error');
         }
     </script>
 </body>

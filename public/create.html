@@ -13,7 +13,7 @@
             max-width: 800px;
             margin: 0 auto;
             padding: 20px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #80ab82 0%, #778472 100%);
             min-height: 100vh;
             color: #333;
         }
@@ -27,7 +27,7 @@
         
         h1 {
             text-align: center;
-            color: #4a5568;
+            color: #778472;
             margin-bottom: 30px;
             font-size: 2.5em;
             font-weight: 300;
@@ -41,7 +41,7 @@
             display: block;
             margin-bottom: 8px;
             font-weight: 600;
-            color: #4a5568;
+            color: #778472;
         }
         
         input[type="password"], textarea {
@@ -62,7 +62,7 @@
         
         input[type="password"]:focus, textarea:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: #7dcd85;
         }
         
         .button-group {
@@ -83,25 +83,25 @@
         }
         
         .primary-btn {
-            background: #48bb78;
+            background: #7dcd85;
             color: white;
         }
         
         .primary-btn:hover:not(:disabled) {
-            background: #38a169;
+            background: #80ab82;
         }
         
         .secondary-btn {
-            background: #e2e8f0;
-            color: #4a5568;
+            background: #bac7be;
+            color: #778472;
         }
         
         .secondary-btn:hover {
-            background: #cbd5e0;
+            background: #c2e1c2;
         }
         
         button:disabled {
-            background: #cbd5e0;
+            background: #c2e1c2;
             cursor: not-allowed;
             opacity: 0.6;
         }
@@ -115,9 +115,9 @@
         }
         
         .status.success {
-            background: #c6f6d5;
-            color: #22543d;
-            border: 1px solid #9ae6b4;
+            background: #c2e1c2;
+            color: #778472;
+            border: 1px solid #7dcd85;
         }
         
         .status.error {
@@ -189,10 +189,10 @@
 </head>
 <body>
     <div class="container">
-        <h1>🔐 Create Encrypted Survey</h1>
+        <h1>Create Encrypted Survey</h1>
         
         <div class="example">
-            <h4>📝 Survey Format Example:</h4>
+            <h4>Survey Format Example:</h4>
             <pre># Customer Feedback Survey
 We'd love to hear your thoughts about our service.
 
@@ -227,20 +227,25 @@ Description of your survey goes here.
             </div>
             
             <div class="button-group">
-                <button type="button" class="secondary-btn" id="previewBtn">👀 Preview</button>
-                <button type="submit" class="primary-btn" id="createBtn" disabled>🔒 Create Encrypted Survey</button>
+                <button type="button" class="secondary-btn" id="previewBtn">Preview</button>
+                <button type="submit" class="primary-btn" id="createBtn" disabled>Create Encrypted Survey</button>
             </div>
         </form>
         
         <div class="status" id="status"></div>
         
         <div class="url-result" id="urlResult" style="display: none;">
-            <strong>✅ Survey Created Successfully!</strong><br>
-            <strong>Survey URL:</strong> <a href="#" id="surveyUrl" target="_blank"></a><br>
-            <strong>Analysis URL:</strong> <a href="#" id="analysisUrl" target="_blank"></a><br>
-            <br>
-            <small>🔗 <strong>URLs include password:</strong> These URLs contain the password after # for convenience. Share responsibly!</small><br>
-            <small>⚠️ Save these URLs! You'll need the password to access responses later.</small>
+            <strong>Survey Created Successfully!</strong><br><br>
+            <strong>Survey URL (SHARE THIS):</strong><br>
+            <a href="#" id="surveyUrl" target="_blank" style="word-break: break-all; display: block; margin: 5px 0 15px 0;"></a>
+            
+            <strong>Analysis URL (SAVE THIS! CANNOT BE RECOVERED IF LOST!):</strong><br>
+            <a href="#" id="analysisUrl" target="_blank" style="word-break: break-all; display: block; margin: 5px 0 15px 0;"></a>
+            
+            <div style="background: #c2e1c2; padding: 15px; border-radius: 6px; border: 1px solid #7dcd85; margin-top: 15px;">
+                <small><strong>URLs include password:</strong> These URLs contain the password after # for convenience. Share responsibly!</small><br>
+                <small><strong>Important:</strong> Save these URLs! You'll need the password to access responses later.</small>
+            </div>
         </div>
     </div>
 
@@ -331,11 +336,11 @@ Description of your survey goes here.
                 }
                 
                 // Create encrypted survey
-                showStatus('🔒 Encrypting survey...', 'info');
+                showStatus('Encrypting survey...', 'info');
                 const encryptedSurvey = await createEncryptedSurvey(survey, passwordInput.value);
                 
                 // Submit to API
-                showStatus('☁️ Uploading to server...', 'info');
+                showStatus('Uploading to server...', 'info');
                 const response = await fetch('/api/survey', {
                     method: 'POST',
                     headers: {
@@ -351,7 +356,7 @@ Description of your survey goes here.
                 }
                 
                 // Show success
-                showStatus('✅ Survey created successfully!', 'success');
+                showStatus('Survey created successfully!', 'success');
                 
                 // Show URLs with password fragment for convenience
                 const baseUrl = window.location.origin;
@@ -368,10 +373,10 @@ Description of your survey goes here.
                 
             } catch (error) {
                 console.error('Create survey error:', error);
-                showStatus('❌ ' + error.message, 'error');
+                showStatus('Error: ' + error.message, 'error');
             } finally {
                 createBtn.disabled = false;
-                createBtn.innerHTML = '🔒 Create Encrypted Survey';
+                createBtn.innerHTML = 'Create Encrypted Survey';
             }
         });
         

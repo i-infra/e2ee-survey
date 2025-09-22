@@ -12,7 +12,7 @@
             max-width: 1000px;
             margin: 0 auto;
             padding: 20px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #80ab82 0%, #778472 100%);
             min-height: 100vh;
             color: #333;
         }
@@ -26,7 +26,7 @@
         
         h1 {
             text-align: center;
-            color: #4a5568;
+            color: #778472;
             margin-bottom: 30px;
             font-size: 2.5em;
             font-weight: 300;
@@ -45,7 +45,7 @@
             display: block;
             margin-bottom: 8px;
             font-weight: 600;
-            color: #4a5568;
+            color: #778472;
         }
         
         input[type="password"] {
@@ -60,7 +60,7 @@
         
         input[type="password"]:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: #7dcd85;
         }
         
         button {
@@ -74,27 +74,27 @@
         }
         
         .primary-btn {
-            background: #48bb78;
+            background: #7dcd85;
             color: white;
             width: 100%;
         }
         
         .primary-btn:hover:not(:disabled) {
-            background: #38a169;
+            background: #80ab82;
         }
         
         .secondary-btn {
-            background: #e2e8f0;
-            color: #4a5568;
+            background: #bac7be;
+            color: #778472;
             margin-top: 10px;
         }
         
         .secondary-btn:hover {
-            background: #cbd5e0;
+            background: #c2e1c2;
         }
         
         button:disabled {
-            background: #cbd5e0;
+            background: #c2e1c2;
             cursor: not-allowed;
             opacity: 0.6;
         }
@@ -160,7 +160,7 @@
         }
         
         .stat-label {
-            color: #4a5568;
+            color: #778472;
             font-size: 0.9em;
         }
         
@@ -188,7 +188,7 @@
         .result-bar {
             flex: 1;
             height: 40px;
-            background: #e2e8f0;
+            background: #bac7be;
             border-radius: 6px;
             position: relative;
             overflow: hidden;
@@ -205,7 +205,7 @@
         }
         
         .yes-fill {
-            background: #48bb78;
+            background: #7dcd85;
         }
         
         .no-fill {
@@ -256,7 +256,7 @@
         .empty-state {
             text-align: center;
             padding: 40px;
-            color: #4a5568;
+            color: #778472;
         }
         
         .hidden {
@@ -282,7 +282,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>📊 Survey Analysis</h1>
+        <h1>Survey Analysis</h1>
         
         <div class="password-prompt" id="passwordPrompt">
             <p>Enter the survey password to view encrypted responses and analytics.</p>
@@ -292,7 +292,7 @@
                 <input type="password" id="surveyPassword" placeholder="Enter the survey password" required>
             </div>
             
-            <button class="primary-btn" id="unlockBtn">🔓 Access Analysis</button>
+            <button class="primary-btn" id="unlockBtn">Access Analysis</button>
         </div>
         
         <div class="analysis-content" id="analysisContent">
@@ -319,16 +319,16 @@
             <div id="questionsAnalysis"></div>
             
             <div class="export-section">
-                <h3>📤 Export Data</h3>
+                <h3>Export Data</h3>
                 <p>Download your survey responses in different formats.</p>
-                <button class="secondary-btn" id="exportJsonBtn">📄 Export as JSON</button>
-                <button class="secondary-btn" id="exportCsvBtn">📊 Export as CSV</button>
+                <button class="secondary-btn" id="exportJsonBtn">Export as JSON</button>
+                <button class="secondary-btn" id="exportCsvBtn">Export as CSV</button>
             </div>
             
             <div class="danger-section">
-                <h3>⚠️ Danger Zone</h3>
+                <h3>Danger Zone</h3>
                 <p>Permanently delete this survey and all responses. This action cannot be undone.</p>
-                <button class="secondary-btn danger-btn" id="deleteSurveyBtn">🗑️ Delete Survey</button>
+                <button class="secondary-btn danger-btn" id="deleteSurveyBtn">Delete Survey</button>
             </div>
         </div>
         
@@ -382,7 +382,7 @@
                 surveyPassword.value = password;
                 
                 // Show auto-unlock info
-                showStatus('🔗 Password loaded from URL - accessing analysis...', 'info');
+                showStatus('Password loaded from URL - accessing analysis...', 'info');
                 
                 // Auto-unlock after a short delay
                 setTimeout(() => {
@@ -410,7 +410,7 @@
                     throw new Error('Please enter a password');
                 }
                 
-                showStatus('📡 Loading survey data...', 'info');
+                showStatus('Loading survey data...', 'info');
                 
                 // Load survey data using analysis ID
                 const surveyResponse = await fetch(`/api/analysis/${analysisId}/survey`);
@@ -423,14 +423,14 @@
                 currentSurvey = surveyResult.data;
                 currentSurveyId = surveyResult.data.id;
                 
-                showStatus('🔓 Decrypting survey...', 'info');
+                showStatus('Decrypting survey...', 'info');
                 
                 // Decrypt survey
                 const { surveyData: decryptedSurvey, key } = await decryptSurvey(currentSurvey, password);
                 surveyData = decryptedSurvey;
                 encryptionKey = key;
                 
-                showStatus('📊 Loading responses...', 'info');
+                showStatus('Loading responses...', 'info');
                 
                 // Get key hash for authorization
                 const keyHash = await createKeyHash(key);
@@ -445,7 +445,7 @@
                 
                 responsesData = responsesResult.data;
                 
-                showStatus('🔐 Decrypting responses...', 'info');
+                showStatus('Decrypting responses...', 'info');
                 
                 // Decrypt all responses
                 const decryptedResponses = [];
@@ -472,10 +472,10 @@
                 
             } catch (error) {
                 console.error('Analysis error:', error);
-                showStatus('❌ ' + error.message, 'error');
+                showStatus('Error: ' + error.message, 'error');
             } finally {
                 unlockBtn.disabled = false;
-                unlockBtn.innerHTML = '🔓 Access Analysis';
+                unlockBtn.innerHTML = 'Access Analysis';
             }
         });
         
@@ -559,7 +559,7 @@
             
             resultsDiv.innerHTML = `
                 <div style="flex: 0 0 60px; text-align: center;">
-                    <strong>✅ Yes</strong><br>
+                    <strong>Yes</strong><br>
                     <small>${yesCount} (${yesPercent}%)</small>
                 </div>
                 <div class="result-bar">
@@ -568,7 +568,7 @@
                     </div>
                 </div>
                 <div style="flex: 0 0 60px; text-align: center;">
-                    <strong>❌ No</strong><br>
+                    <strong>No</strong><br>
                     <small>${noCount} (${noPercent}%)</small>
                 </div>
                 <div class="result-bar">
@@ -651,7 +651,7 @@
                 deleteSurveyBtn.disabled = true;
                 deleteSurveyBtn.innerHTML = '<span class="loading"></span> Deleting...';
                 
-                showStatus('🗑️ Deleting survey and all responses...', 'info');
+                showStatus('Deleting survey and all responses...', 'info');
                 
                 // Get key hash for authorization
                 const keyHash = await createKeyHash(encryptionKey);
@@ -667,7 +667,7 @@
                     throw new Error(result.error || 'Failed to delete survey');
                 }
                 
-                showStatus('✅ Survey and all responses deleted successfully', 'success');
+                showStatus('Survey and all responses deleted successfully', 'success');
                 
                 // Redirect to home page after a delay
                 setTimeout(() => {
@@ -676,10 +676,10 @@
                 
             } catch (error) {
                 console.error('Delete survey error:', error);
-                showStatus('❌ Failed to delete survey: ' + error.message, 'error');
+                showStatus('Failed to delete survey: ' + error.message, 'error');
             } finally {
                 deleteSurveyBtn.disabled = false;
-                deleteSurveyBtn.innerHTML = '🗑️ Delete Survey';
+                deleteSurveyBtn.innerHTML = 'Delete Survey';
             }
         });
         
@@ -705,10 +705,24 @@
             status.style.display = 'none';
         }
         
+        // Trigger lazy cleanup (fire and forget, doesn't block analysis)
+        async function triggerCleanup() {
+            try {
+                await fetch('/api/cleanup', { method: 'POST' });
+                // Silent cleanup - we don't need to handle the response
+            } catch (error) {
+                // Silent failure - cleanup is not critical for analysis functionality
+                console.debug('Cleanup request failed (non-critical):', error);
+            }
+        }
+        
         // Check if analysis ID is provided and handle URL fragment
         if (!analysisId) {
-            showStatus('❌ Invalid analysis URL', 'error');
+            showStatus('Error: Invalid analysis URL', 'error');
         } else {
+            // Trigger cleanup in background
+            triggerCleanup();
+            
             // Check if password is provided in URL fragment
             checkUrlFragment();
         }
