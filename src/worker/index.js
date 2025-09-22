@@ -14,7 +14,8 @@ import {
   getSurveyStatsByAnalysisId,
   canAcceptResponses,
   deleteSurvey,
-  deleteSurveyByAnalysisId
+  deleteSurveyByAnalysisId,
+  cleanupExpiredSurveys
 } from './database.js';
 
 // Import inlined static assets
@@ -26,6 +27,11 @@ function generateId() {
   const randomPart = Math.random().toString(36).substring(2, 15);
   return (timestamp + randomPart).toUpperCase().substring(0, 26);
 }
+
+// Global cleanup cooldown tracker (in-memory, resets on worker restart)
+let lastCleanupTime = 0;
+let cleanupInProgress = false;
+const CLEANUP_COOLDOWN = 60 * 60 * 1000; // 1 hour in milliseconds
 
 // CORS headers
 const corsHeaders = {
@@ -354,6 +360,59 @@ async function handleDeleteSurvey(surveyId, request, env) {
 }
 
 /**
+ * Handle cleanup of expired surveys (zero-knowledge endpoint with cooldown)
+ */
+async function handleCleanup(env) {
+  try {
+    const now = Date.now();
+    
+    // Check if cleanup is already in progress
+    if (cleanupInProgress) {
+      return apiResponse({
+        success: true,
+        message: 'Cleanup already in progress',
+        nextCleanupAllowedAt: lastCleanupTime + CLEANUP_COOLDOWN
+      });
+    }
+    
+    // Check cooldown
+    if (now - lastCleanupTime < CLEANUP_COOLDOWN) {
+      return apiResponse({
+        success: true,
+        message: 'Cleanup skipped - still in cooldown period',
+        nextCleanupAllowedAt: lastCleanupTime + CLEANUP_COOLDOWN
+      });
+    }
+    
+    // Set lock and perform cleanup
+    cleanupInProgress = true;
+    
+    try {
+      const result = await cleanupExpiredSurveys(env.DB);
+      lastCleanupTime = now;
+      
+      console.log(`Cleanup completed: deleted ${result.deletedCount} expired surveys`);
+      
+      return apiResponse({
+        success: true,
+        message: 'Cleanup completed',
+        deletedSurveys: result.deletedCount,
+        nextCleanupAllowedAt: now + CLEANUP_COOLDOWN
+      });
+      
+    } finally {
+      // Always release lock
+      cleanupInProgress = false;
+    }
+    
+  } catch (error) {
+    console.error('Cleanup error:', error);
+    cleanupInProgress = false; // Ensure lock is released on error
+    return errorResponse('Cleanup failed', 500);
+  }
+}
+
+/**
  * Route requests
  */
 async function handleRequest(request, env) {
@@ -414,6 +473,11 @@ async function handleRequest(request, env) {
     const analysisDeleteMatch = path.match(/^\/api\/analysis\/([a-zA-Z0-9]+)$/);
     if (analysisDeleteMatch && method === 'DELETE') {
       return handleDeleteSurveyByAnalysisId(analysisDeleteMatch[1], request, env);
+    }
+    
+    // POST /api/cleanup - Cleanup expired surveys (zero-knowledge with cooldown)
+    if (path === '/api/cleanup' && method === 'POST') {
+      return handleCleanup(env);
     }
     
     return errorResponse('API endpoint not found', 404);
