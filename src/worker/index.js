@@ -123,6 +123,7 @@ async function handleGetSurvey(surveyId, env) {
         id: survey.id,
         salt: survey.salt,
         encryptedData: survey.questions,
+        keyHash: survey.creatorKeyHash,
         createdAt: survey.createdAt,
         expiresAt: survey.expiresAt,
         maxResponses: survey.maxResponses
