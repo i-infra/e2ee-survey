@@ -14,7 +14,7 @@
             min-height: 100vh;
             color: #333;
         }
-        
+
         .container {
             background: white;
             padding: 40px;
@@ -22,53 +22,53 @@
             box-shadow: 0 20px 40px rgba(0,0,0,0.1);
             text-align: center;
         }
-        
+
         h1 {
             color: #778472;
             margin-bottom: 20px;
             font-size: 3em;
             font-weight: 300;
         }
-        
+
         .subtitle {
             color: #778472;
             font-size: 1.2em;
             margin-bottom: 40px;
         }
-        
+
         .features {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 30px;
             margin: 40px 0;
         }
-        
+
         .feature {
             padding: 30px;
             background: #c2e1c2;
             border-radius: 8px;
             border: 1px solid #bac7be;
         }
-        
+
         .feature-icon {
             font-size: 3em;
             margin-bottom: 15px;
         }
-        
+
         .feature h3 {
             color: #778472;
             margin-bottom: 10px;
         }
-        
+
         .feature p {
             color: #778472;
             line-height: 1.6;
         }
-        
+
         .cta-section {
             margin: 50px 0;
         }
-        
+
         .cta-button {
             display: inline-block;
             padding: 20px 40px;
@@ -81,20 +81,20 @@
             margin: 10px;
             transition: all 0.3s ease;
         }
-        
+
         .cta-button:hover {
             background: #80ab82;
             transform: translateY(-2px);
         }
-        
+
         .secondary-button {
             background: #778472;
         }
-        
+
         .secondary-button:hover {
             background: #80ab82;
         }
-        
+
         .info-section {
             background: #c2e1c2;
             border: 1px solid #bac7be;
@@ -103,17 +103,17 @@
             margin: 40px 0;
             text-align: left;
         }
-        
+
         .info-section h3 {
             color: #778472;
             margin-bottom: 15px;
         }
-        
+
         .info-section ul {
             color: #778472;
             line-height: 1.8;
         }
-        
+
         .footer {
             margin-top: 50px;
             padding-top: 30px;
@@ -127,27 +127,27 @@
     <div class="container">
         <h1>Encrypted Survey Tool</h1>
         <p class="subtitle">Create and share completely private surveys with end-to-end encryption</p>
-        
+
         <div class="features">
             <div class="feature">
                 <div class="feature-icon">🔒</div>
                 <h3>End-to-End Encrypted</h3>
                 <p>Your survey questions and responses are encrypted before they leave your device. Even we can't see them.</p>
             </div>
-            
+
             <div class="feature">
                 <div class="feature-icon">•</div>
                 <h3>Anonymous & Private</h3>
                 <p>No accounts required. No tracking. No data mining. Complete respondent privacy.</p>
             </div>
-            
+
             <div class="feature">
                 <div class="feature-icon">•</div>
                 <h3>Simple Markdown Format</h3>
                 <p>Create surveys using simple markdown syntax. No complex form builders needed.</p>
             </div>
         </div>
-        
+
         <div class="cta-section">
             <a href="/create" class="cta-button">
                 Create New Survey
@@ -157,7 +157,7 @@
                 How It Works
             </a>
         </div>
-        
+
         <div class="info-section" id="how-it-works">
             <h3>How End-to-End Encryption Works</h3>
             <ul>
@@ -167,7 +167,7 @@
                 <li><strong>Response Collection:</strong> Respondents decrypt the survey, answer, and re-encrypt their responses</li>
                 <li><strong>Analysis:</strong> Only you can decrypt and view the responses with your password</li>
             </ul>
-            
+
             <h3>Survey Format Example</h3>
             <pre style="background: white; padding: 15px; border-radius: 4px; overflow-x: auto;"># Customer Feedback Survey
 We'd love to hear your thoughts about our service.
@@ -179,7 +179,7 @@ We'd love to hear your thoughts about our service.
 - **yes/no** Would you recommend us to a friend?
 - **text** Any additional comments?</pre>
         </div>
-        
+
         <div class="info-section">
             <h3>Privacy Guarantees</h3>
             <ul>
@@ -191,11 +191,11 @@ We'd love to hear your thoughts about our service.
                 <li>Cleanup runs when analysis pages are accessed (1-hour cooldown prevents abuse)</li>
             </ul>
         </div>
-        
+
         <div class="footer">
             <p>
-                <strong>Privacy First:</strong> This tool was built as an alternative to traditional survey platforms 
-                that require accounts and may access your data. Here, privacy is not optional - it's built into 
+                <strong>Privacy First:</strong> This tool was built as an alternative to traditional survey platforms
+                that require accounts and may access your data. Here, privacy is not optional - it's built into
                 the architecture.
             </p>
             <br>
@@ -204,7 +204,7 @@ We'd love to hear your thoughts about our service.
             </p>
             <ul>
                 <li><strong>Encryption:</strong> TweetNaCl's XSalsa20-Poly1305 authenticated encryption (32-byte keys, 24-byte nonces)</li>
-                <li><strong>Key Derivation:</strong> Argon2id with 32-byte output, 16-byte random salt, 3 iterations, 64MB memory</li>
+                <li><strong>Key Derivation:</strong> Argon2id with 32-byte output, 16-byte salt, 3 iterations, 64MB memory</li>
                 <li><strong>Key Verification:</strong> SHA-256 hash of derived key for password verification</li>
                 <li><strong>Random Generation:</strong> Cryptographically secure random bytes for salts and nonces</li>
                 <li><strong>Data Format:</strong> Encrypted data stored as Uint8Array, converted to/from Base64 for transport</li>

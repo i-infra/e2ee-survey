@@ -17,14 +17,14 @@
             min-height: 100vh;
             color: #333;
         }
-        
+
         .container {
             background: white;
             padding: 40px;
             border-radius: 12px;
             box-shadow: 0 20px 40px rgba(0,0,0,0.1);
         }
-        
+
         h1 {
             text-align: center;
             color: #778472;
@@ -32,27 +32,27 @@
             font-size: 2.5em;
             font-weight: 300;
         }
-        
+
         .password-prompt {
             text-align: center;
             margin-bottom: 30px;
         }
-        
+
         .form-group {
             margin-bottom: 20px;
         }
-        
+
         label {
             display: block;
             margin-bottom: 8px;
             font-weight: 600;
             color: #778472;
         }
-        
+
         input[type="password"], input[type="radio"], textarea {
             margin-bottom: 8px;
         }
-        
+
         input[type="password"], textarea {
             width: 100%;
             padding: 12px;
@@ -63,17 +63,17 @@
             box-sizing: border-box;
             font-family: inherit;
         }
-        
+
         textarea {
             min-height: 100px;
             resize: vertical;
         }
-        
+
         input[type="password"]:focus, textarea:focus {
             outline: none;
             border-color: #7dcd85;
         }
-        
+
         .question {
             background: #f7fafc;
             border: 1px solid #e2e8f0;
@@ -81,19 +81,19 @@
             padding: 20px;
             margin-bottom: 20px;
         }
-        
+
         .question h3 {
             margin: 0 0 15px 0;
             color: #2d3748;
             font-size: 1.2em;
         }
-        
+
         .yes-no-options {
             display: flex;
             gap: 20px;
             align-items: center;
         }
-        
+
         .radio-option {
             display: flex;
             align-items: center;
@@ -103,15 +103,15 @@
             border-radius: 6px;
             transition: background-color 0.2s;
         }
-        
+
         .radio-option:hover {
             background: #bac7be;
         }
-        
+
         .radio-option input[type="radio"] {
             margin: 0;
         }
-        
+
         button {
             padding: 15px 30px;
             border: none;
@@ -121,33 +121,33 @@
             cursor: pointer;
             transition: all 0.3s ease;
         }
-        
+
         .primary-btn {
             background: #7dcd85;
             color: white;
             width: 100%;
         }
-        
+
         .primary-btn:hover:not(:disabled) {
             background: #80ab82;
         }
-        
+
         .secondary-btn {
             background: #bac7be;
             color: #778472;
             width: 100%;
         }
-        
+
         .secondary-btn:hover {
             background: #c2e1c2;
         }
-        
+
         button:disabled {
             background: #c2e1c2;
             cursor: not-allowed;
             opacity: 0.6;
         }
-        
+
         .status {
             margin: 20px 0;
             padding: 15px;
@@ -155,29 +155,29 @@
             text-align: center;
             display: none;
         }
-        
+
         .status.success {
             background: #c2e1c2;
             color: #778472;
             border: 1px solid #7dcd85;
         }
-        
+
         .status.error {
             background: #fed7d7;
             color: #742a2a;
             border: 1px solid #fc8181;
         }
-        
+
         .status.info {
             background: #bee3f8;
             color: #2a4365;
             border: 1px solid #63b3ed;
         }
-        
+
         .survey-content {
             display: none;
         }
-        
+
         .survey-description {
             background: #e6fffa;
             border: 1px solid #81e6d9;
@@ -186,7 +186,7 @@
             margin-bottom: 30px;
             color: #234e52;
         }
-        
+
         .loading {
             display: inline-block;
             width: 20px;
@@ -196,22 +196,22 @@
             border-top-color: #667eea;
             animation: spin 1s ease-in-out infinite;
         }
-        
+
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
-        
+
         .success-message {
             text-align: center;
             padding: 40px;
             color: #778472;
         }
-        
+
         .success-message h2 {
             color: #778472;
             margin-bottom: 20px;
         }
-        
+
         .hidden {
             display: none;
         }
@@ -220,47 +220,47 @@
 <body>
     <div class="container">
         <h1>Encrypted Survey</h1>
-        
+
         <div class="password-prompt" id="passwordPrompt">
             <p>This survey is end-to-end encrypted. Please enter the password to access the survey questions.</p>
-            
+
             <div class="form-group">
                 <label for="surveyPassword">Survey Password:</label>
                 <input type="password" id="surveyPassword" placeholder="Enter the survey password" required>
             </div>
-            
+
             <button class="primary-btn" id="unlockBtn">Unlock Survey</button>
         </div>
-        
+
         <div class="survey-content" id="surveyContent">
             <div class="survey-description" id="surveyDescription"></div>
-            
+
             <form id="responseForm">
                 <div id="questionsContainer"></div>
-                
+
                 <button type="submit" class="primary-btn" id="submitBtn">📤 Submit Response</button>
             </form>
         </div>
-        
+
         <div class="success-message hidden" id="successMessage">
             <h2>Thank You!</h2>
             <p>Your response has been submitted successfully and encrypted before storage.</p>
             <p>Your privacy is protected - even the survey administrators cannot see your individual response without the encryption key.</p>
         </div>
-        
+
         <div class="status" id="status"></div>
     </div>
 
     <script type="module">
         import { initCrypto, decryptSurvey, encryptData, generateUlid } from '../src/shared/crypto.js';
         import { createResponseStructure, validateResponses } from '../src/shared/survey-parser.js';
-        
+
         // Initialize crypto libraries
         initCrypto(nacl, argon2);
-        
+
         // Get survey ID from URL
         const surveyId = window.location.pathname.split('/survey/')[1];
-        
+
         // DOM elements
         const passwordPrompt = document.getElementById('passwordPrompt');
         const surveyContent = document.getElementById('surveyContent');
@@ -272,36 +272,36 @@
         const responseForm = document.getElementById('responseForm');
         const submitBtn = document.getElementById('submitBtn');
         const status = document.getElementById('status');
-        
+
         let currentSurvey = null;
         let decryptedSurvey = null;
         let encryptionKey = null;
-        
+
         // Check URL fragment for password
         async function checkUrlFragment() {
             const hash = window.location.hash;
             if (!hash || hash.length <= 1) return false;
-            
+
             // Remove the # and decode
             const password = decodeURIComponent(hash.substring(1));
-            
+
             if (!password) return false;
-            
+
             try {
                 // Set the password field
                 surveyPassword.value = password;
-                
+
                 // Show auto-unlock info
                 showStatus('🔗 Password loaded from URL - unlocking automatically...', 'info');
-                
+
                 // Auto-unlock after a short delay
                 setTimeout(() => {
                     unlockBtn.click();
                 }, 1000);
-                
+
                 // Clear the URL fragment for security
                 history.replaceState(null, null, window.location.pathname + window.location.search);
-                
+
                 return true;
             } catch (error) {
                 console.error('URL fragment error:', error);
@@ -313,55 +313,55 @@
         async function loadSurvey() {
             try {
                 showStatus('Loading survey...', 'info');
-                
+
                 const response = await fetch(`/api/survey/${surveyId}`);
                 const result = await response.json();
-                
+
                 if (!result.success) {
                     throw new Error(result.error || 'Failed to load survey');
                 }
-                
+
                 currentSurvey = result.data;
                 hideStatus();
-                
+
                 // Check if password is provided in URL fragment
                 const hasUrlPassword = await checkUrlFragment();
                 if (!hasUrlPassword) {
                     // No URL password, show normal prompt
                     hideStatus();
                 }
-                
+
             } catch (error) {
                 console.error('Load survey error:', error);
                 showStatus('Error: ' + error.message, 'error');
             }
         }
-        
+
         // Unlock survey with password
         unlockBtn.addEventListener('click', async () => {
             try {
                 unlockBtn.disabled = true;
                 unlockBtn.innerHTML = '<span class="loading"></span> Unlocking...';
-                
+
                 const password = surveyPassword.value;
                 if (!password) {
                     throw new Error('Please enter a password');
                 }
-                
+
                 showStatus('Decrypting survey...', 'info');
-                
+
                 const { surveyData, key } = await decryptSurvey(currentSurvey, password);
                 decryptedSurvey = surveyData;
                 encryptionKey = key;
-                
+
                 // Render survey
                 renderSurvey(surveyData);
-                
+
                 // Show survey content
                 passwordPrompt.style.display = 'none';
                 surveyContent.style.display = 'block';
                 hideStatus();
-                
+
             } catch (error) {
                 console.error('Unlock error:', error);
                 showStatus('Error: ' + error.message, 'error');
@@ -370,40 +370,40 @@
                 unlockBtn.innerHTML = 'Unlock Survey';
             }
         });
-        
+
         // Allow Enter key to unlock
         surveyPassword.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
                 unlockBtn.click();
             }
         });
-        
+
         // Render survey questions
         function renderSurvey(survey) {
             // Set title and description
             document.title = survey.title + ' - Encrypted Survey';
-            
+
             if (survey.description) {
                 surveyDescription.innerHTML = `<strong>${survey.title}</strong><br>${survey.description}`;
             } else {
                 surveyDescription.innerHTML = `<strong>${survey.title}</strong>`;
             }
-            
+
             // Render questions
             questionsContainer.innerHTML = '';
-            
+
             survey.questions.forEach((question, index) => {
                 const questionDiv = document.createElement('div');
                 questionDiv.className = 'question';
-                
+
                 const questionTitle = document.createElement('h3');
                 questionTitle.textContent = `${index + 1}. ${question.text}`;
                 questionDiv.appendChild(questionTitle);
-                
+
                 if (question.type === 'yes_no') {
                     const optionsDiv = document.createElement('div');
                     optionsDiv.className = 'yes-no-options';
-                    
+
                     // Yes option
                     const yesLabel = document.createElement('label');
                     yesLabel.className = 'radio-option';
@@ -411,7 +411,7 @@
                         <input type="radio" name="${question.id}" value="true" required>
                         <span>Yes</span>
                     `;
-                    
+
                     // No option
                     const noLabel = document.createElement('label');
                     noLabel.className = 'radio-option';
@@ -419,11 +419,11 @@
                         <input type="radio" name="${question.id}" value="false" required>
                         <span>No</span>
                     `;
-                    
+
                     optionsDiv.appendChild(yesLabel);
                     optionsDiv.appendChild(noLabel);
                     questionDiv.appendChild(optionsDiv);
-                    
+
                 } else if (question.type === 'text') {
                     const textarea = document.createElement('textarea');
                     textarea.name = question.id;
@@ -431,26 +431,26 @@
                     textarea.required = true;
                     questionDiv.appendChild(textarea);
                 }
-                
+
                 questionsContainer.appendChild(questionDiv);
             });
         }
-        
+
         // Handle form submission
         responseForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            
+
             try {
                 submitBtn.disabled = true;
                 submitBtn.innerHTML = '<span class="loading"></span> Submitting...';
-                
+
                 // Collect responses
                 const formData = new FormData(responseForm);
                 const responses = {};
-                
+
                 decryptedSurvey.questions.forEach(question => {
                     const value = formData.get(question.id);
-                    
+
                     if (question.type === 'yes_no') {
                         responses[question.id] = {
                             type: 'yes_no',
@@ -463,25 +463,25 @@
                         };
                     }
                 });
-                
+
                 // Validate responses
                 const validation = validateResponses(decryptedSurvey, responses);
                 if (!validation.valid) {
                     throw new Error(validation.errors.join(', '));
                 }
-                
+
                 showStatus('Encrypting response...', 'info');
-                
+
                 // Encrypt responses
                 const encryptedAnswers = encryptData(responses, encryptionKey);
-                
+
                 const responseData = {
                     id: generateUlid(),
                     encryptedAnswers: Array.from(encryptedAnswers)
                 };
-                
+
                 showStatus('☁️ Submitting response...', 'info');
-                
+
                 // Submit to API
                 const response = await fetch(`/api/survey/${surveyId}/response`, {
                     method: 'POST',
@@ -490,18 +490,18 @@
                     },
                     body: JSON.stringify({ encryptedResponse: responseData })
                 });
-                
+
                 const result = await response.json();
-                
+
                 if (!result.success) {
                     throw new Error(result.error || 'Failed to submit response');
                 }
-                
+
                 // Show success
                 surveyContent.style.display = 'none';
                 successMessage.classList.remove('hidden');
                 hideStatus();
-                
+
             } catch (error) {
                 console.error('Submit error:', error);
                 showStatus('Error: ' + error.message, 'error');
@@ -510,17 +510,17 @@
                 submitBtn.innerHTML = '📤 Submit Response';
             }
         });
-        
+
         function showStatus(message, type) {
             status.textContent = message;
             status.className = `status ${type}`;
             status.style.display = 'block';
         }
-        
+
         function hideStatus() {
             status.style.display = 'none';
         }
-        
+
         // Load survey on page load
         if (surveyId) {
             loadSurvey();

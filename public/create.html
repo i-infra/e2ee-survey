@@ -17,14 +17,14 @@
             min-height: 100vh;
             color: #333;
         }
-        
+
         .container {
             background: white;
             padding: 40px;
             border-radius: 12px;
             box-shadow: 0 20px 40px rgba(0,0,0,0.1);
         }
-        
+
         h1 {
             text-align: center;
             color: #778472;
@@ -32,18 +32,18 @@
             font-size: 2.5em;
             font-weight: 300;
         }
-        
+
         .form-group {
             margin-bottom: 20px;
         }
-        
+
         label {
             display: block;
             margin-bottom: 8px;
             font-weight: 600;
             color: #778472;
         }
-        
+
         input[type="password"], textarea {
             width: 100%;
             padding: 12px;
@@ -54,23 +54,23 @@
             box-sizing: border-box;
             font-family: inherit;
         }
-        
+
         textarea {
             min-height: 300px;
             resize: vertical;
         }
-        
+
         input[type="password"]:focus, textarea:focus {
             outline: none;
             border-color: #7dcd85;
         }
-        
+
         .button-group {
             display: flex;
             gap: 15px;
             margin-top: 30px;
         }
-        
+
         button {
             flex: 1;
             padding: 15px;
@@ -81,31 +81,31 @@
             cursor: pointer;
             transition: all 0.3s ease;
         }
-        
+
         .primary-btn {
             background: #7dcd85;
             color: white;
         }
-        
+
         .primary-btn:hover:not(:disabled) {
             background: #80ab82;
         }
-        
+
         .secondary-btn {
             background: #bac7be;
             color: #778472;
         }
-        
+
         .secondary-btn:hover {
             background: #c2e1c2;
         }
-        
+
         button:disabled {
             background: #c2e1c2;
             cursor: not-allowed;
             opacity: 0.6;
         }
-        
+
         .status {
             margin-top: 20px;
             padding: 15px;
@@ -113,25 +113,25 @@
             text-align: center;
             display: none;
         }
-        
+
         .status.success {
             background: #c2e1c2;
             color: #778472;
             border: 1px solid #7dcd85;
         }
-        
+
         .status.error {
             background: #fed7d7;
             color: #742a2a;
             border: 1px solid #fc8181;
         }
-        
+
         .status.info {
             background: #bee3f8;
             color: #2a4365;
             border: 1px solid #63b3ed;
         }
-        
+
         .example {
             background: #f7fafc;
             border: 1px solid #e2e8f0;
@@ -141,18 +141,18 @@
             font-size: 14px;
             color: #4a5568;
         }
-        
+
         .example h4 {
             margin: 0 0 10px 0;
             color: #2d3748;
         }
-        
+
         .example pre {
             margin: 0;
             white-space: pre-wrap;
             font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
         }
-        
+
         .url-result {
             background: #e6fffa;
             border: 1px solid #81e6d9;
@@ -161,17 +161,17 @@
             margin-top: 20px;
             word-break: break-all;
         }
-        
+
         .url-result a {
             color: #2c7a7b;
             text-decoration: none;
             font-weight: 600;
         }
-        
+
         .url-result a:hover {
             text-decoration: underline;
         }
-        
+
         .loading {
             display: inline-block;
             width: 20px;
@@ -181,7 +181,7 @@
             border-top-color: #667eea;
             animation: spin 1s ease-in-out infinite;
         }
-        
+
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
@@ -190,7 +190,7 @@
 <body>
     <div class="container">
         <h1>Create Encrypted Survey</h1>
-        
+
         <div class="example">
             <h4>Survey Format Example:</h4>
             <pre># Customer Feedback Survey
@@ -203,7 +203,7 @@ We'd love to hear your thoughts about our service.
 - **yes/no** Would you recommend us to a friend?
 - **text** Any additional comments?</pre>
         </div>
-        
+
         <form id="surveyForm">
             <div class="form-group">
                 <label for="surveyMarkdown">Survey Content (Markdown):</label>
@@ -215,33 +215,33 @@ Description of your survey goes here.
 - **yes/no** First question?
 - **text** What are your thoughts?</textarea>
             </div>
-            
+
             <div class="form-group">
                 <label for="password">Encryption Password:</label>
                 <input type="password" id="password" placeholder="Enter a strong password to encrypt your survey" required>
             </div>
-            
+
             <div class="form-group">
                 <label for="confirmPassword">Confirm Password:</label>
                 <input type="password" id="confirmPassword" placeholder="Confirm your password" required>
             </div>
-            
+
             <div class="button-group">
                 <button type="button" class="secondary-btn" id="previewBtn">Preview</button>
                 <button type="submit" class="primary-btn" id="createBtn" disabled>Create Encrypted Survey</button>
             </div>
         </form>
-        
+
         <div class="status" id="status"></div>
-        
+
         <div class="url-result" id="urlResult" style="display: none;">
             <strong>Survey Created Successfully!</strong><br><br>
             <strong>Survey URL (SHARE THIS):</strong><br>
             <a href="#" id="surveyUrl" target="_blank" style="word-break: break-all; display: block; margin: 5px 0 15px 0;"></a>
-            
+
             <strong>Analysis URL (SAVE THIS! CANNOT BE RECOVERED IF LOST!):</strong><br>
             <a href="#" id="analysisUrl" target="_blank" style="word-break: break-all; display: block; margin: 5px 0 15px 0;"></a>
-            
+
             <div style="background: #c2e1c2; padding: 15px; border-radius: 6px; border: 1px solid #7dcd85; margin-top: 15px;">
                 <small><strong>URLs include password:</strong> These URLs contain the password after # for convenience. Share responsibly!</small><br>
                 <small><strong>Important:</strong> Save these URLs! You'll need the password to access responses later.</small>
@@ -252,10 +252,10 @@ Description of your survey goes here.
     <script type="module">
         import { initCrypto, createEncryptedSurvey, validatePassword } from '../src/shared/crypto.js';
         import { parseSurveyMarkdown, validateSurvey, getExampleSurvey } from '../src/shared/survey-parser.js';
-        
+
         // Initialize crypto libraries
         initCrypto(nacl, argon2);
-        
+
         const form = document.getElementById('surveyForm');
         const markdownInput = document.getElementById('surveyMarkdown');
         const passwordInput = document.getElementById('password');
@@ -266,79 +266,79 @@ Description of your survey goes here.
         const urlResult = document.getElementById('urlResult');
         const surveyUrl = document.getElementById('surveyUrl');
         const analysisUrl = document.getElementById('analysisUrl');
-        
+
         // Load example survey
         markdownInput.value = getExampleSurvey();
-        
+
         // Form validation
         function updateFormState() {
             const hasMarkdown = markdownInput.value.trim().length > 0;
             const hasPassword = passwordInput.value.length >= 8;
             const passwordsMatch = passwordInput.value === confirmPasswordInput.value;
-            
+
             createBtn.disabled = !(hasMarkdown && hasPassword && passwordsMatch);
         }
-        
+
         markdownInput.addEventListener('input', updateFormState);
         passwordInput.addEventListener('input', updateFormState);
         confirmPasswordInput.addEventListener('input', updateFormState);
-        
+
         // Preview functionality
         previewBtn.addEventListener('click', () => {
             try {
                 const survey = parseSurveyMarkdown(markdownInput.value);
                 const validation = validateSurvey(survey);
-                
+
                 if (!validation.valid) {
                     showStatus(validation.errors.join(', '), 'error');
                     return;
                 }
-                
+
                 let preview = `📋 Survey Preview:\n\n`;
                 preview += `Title: ${survey.title}\n`;
                 if (survey.description) {
                     preview += `Description: ${survey.description}\n`;
                 }
                 preview += `\nQuestions (${survey.questions.length}):\n`;
-                
+
                 survey.questions.forEach((q, i) => {
                     const type = q.type === 'yes_no' ? 'Yes/No' : 'Text';
                     preview += `${i + 1}. [${type}] ${q.text}\n`;
                 });
-                
+
                 alert(preview);
-                
+
             } catch (error) {
                 showStatus('Invalid survey format: ' + error.message, 'error');
             }
         });
-        
+
         // Form submission
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
-            
+
             try {
                 createBtn.disabled = true;
                 createBtn.innerHTML = '<span class="loading"></span> Creating...';
-                
+
                 // Parse and validate survey
                 const survey = parseSurveyMarkdown(markdownInput.value);
                 const validation = validateSurvey(survey);
-                
+
                 if (!validation.valid) {
                     throw new Error(validation.errors.join(', '));
                 }
-                
+
                 // Validate password
                 const passwordValidation = validatePassword(passwordInput.value);
                 if (!passwordValidation.valid) {
                     throw new Error(passwordValidation.message);
                 }
-                
+
                 // Create encrypted survey
                 showStatus('Encrypting survey...', 'info');
                 const encryptedSurvey = await createEncryptedSurvey(survey, passwordInput.value);
-                
+
                 // Submit to API
                 showStatus('Uploading to server...', 'info');
                 const response = await fetch('/api/survey', {
@@ -348,29 +348,29 @@ Description of your survey goes here.
                     },
                     body: JSON.stringify({ encryptedSurvey })
                 });
-                
+
                 const result = await response.json();
-                
+
                 if (!result.success) {
                     throw new Error(result.error || 'Failed to create survey');
                 }
-                
+
                 // Show success
                 showStatus('Survey created successfully!', 'success');
-                
+
                 // Show URLs with password fragment for convenience
                 const baseUrl = window.location.origin;
                 const password = encodeURIComponent(passwordInput.value);
                 const surveyUrlValue = `${baseUrl}/survey/${result.data.id}#${password}`;
                 const analysisUrlValue = `${baseUrl}/analyze/${result.data.analysisId}#${password}`;
-                
+
                 surveyUrl.href = surveyUrlValue;
                 surveyUrl.textContent = surveyUrlValue;
                 analysisUrl.href = analysisUrlValue;
                 analysisUrl.textContent = analysisUrlValue;
-                
+
                 urlResult.style.display = 'block';
-                
+
             } catch (error) {
                 console.error('Create survey error:', error);
                 showStatus('Error: ' + error.message, 'error');
@@ -379,7 +379,7 @@ Description of your survey goes here.
                 createBtn.innerHTML = 'Create Encrypted Survey';
             }
         });
-        
+
         function showStatus(message, type) {
             status.textContent = message;
             status.className = `status ${type}`;
