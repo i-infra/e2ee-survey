@@ -44,9 +44,9 @@
             color: #778472;
         }
 
-        input[type="password"], textarea {
+        input[type="password"], input.pw-field, textarea {
             width: 100%;
-            padding: 12px;
+            padding: 12px 44px 12px 12px;
             border: 2px solid #e2e8f0;
             border-radius: 6px;
             font-size: 16px;
@@ -58,11 +58,35 @@
         textarea {
             min-height: 300px;
             resize: vertical;
+            padding-right: 12px;
         }
 
-        input[type="password"]:focus, textarea:focus {
+        input[type="password"]:focus, input.pw-field:focus, textarea:focus {
             outline: none;
             border-color: #7dcd85;
+        }
+
+        .password-wrapper {
+            position: relative;
+        }
+
+        .pw-toggle {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            padding: 4px;
+            color: #778472;
+            user-select: none;
+            line-height: 1;
+        }
+
+        .pw-toggle:hover {
+            color: #4a5568;
         }
 
         .button-group {
@@ -218,12 +242,18 @@ Description of your survey goes here.
 
             <div class="form-group">
                 <label for="password">Encryption Password:</label>
-                <input type="password" id="password" placeholder="Enter a strong password to encrypt your survey" required>
+                <div class="password-wrapper">
+                    <input type="password" id="password" class="pw-field" placeholder="Enter a strong password to encrypt your survey" required>
+                    <button type="button" class="pw-toggle" onclick="togglePw('password', this)" title="Show/hide password">👁</button>
+                </div>
             </div>
 
             <div class="form-group">
                 <label for="confirmPassword">Confirm Password:</label>
-                <input type="password" id="confirmPassword" placeholder="Confirm your password" required>
+                <div class="password-wrapper">
+                    <input type="password" id="confirmPassword" class="pw-field" placeholder="Confirm your password" required>
+                    <button type="button" class="pw-toggle" onclick="togglePw('confirmPassword', this)" title="Show/hide password">👁</button>
+                </div>
             </div>
 
             <div class="button-group">
@@ -257,6 +287,17 @@ Description of your survey goes here.
         initCrypto(nacl, argon2);
 
         const form = document.getElementById('surveyForm');
+        window.togglePw = function(id, btn) {
+            const input = document.getElementById(id);
+            if (input.type === 'password') {
+                input.type = 'text';
+                btn.textContent = '🙈';
+            } else {
+                input.type = 'password';
+                btn.textContent = '👁';
+            }
+        };
+
         const markdownInput = document.getElementById('surveyMarkdown');
         const passwordInput = document.getElementById('password');
         const confirmPasswordInput = document.getElementById('confirmPassword');

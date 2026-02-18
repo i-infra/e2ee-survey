@@ -53,15 +53,38 @@
             margin-bottom: 8px;
         }
 
-        input[type="password"], textarea {
+        input[type="password"], input.pw-field, textarea {
             width: 100%;
-            padding: 12px;
+            padding: 12px 44px 12px 12px;
             border: 2px solid #e2e8f0;
             border-radius: 6px;
             font-size: 16px;
             transition: border-color 0.3s ease;
             box-sizing: border-box;
             font-family: inherit;
+        }
+
+        .password-wrapper {
+            position: relative;
+        }
+
+        .pw-toggle {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            padding: 4px;
+            color: #778472;
+            user-select: none;
+            line-height: 1;
+        }
+
+        .pw-toggle:hover {
+            color: #4a5568;
         }
 
         textarea {
@@ -226,7 +249,10 @@
 
             <div class="form-group">
                 <label for="surveyPassword">Survey Password:</label>
-                <input type="password" id="surveyPassword" placeholder="Enter the survey password" required>
+                <div class="password-wrapper">
+                    <input type="password" id="surveyPassword" class="pw-field" placeholder="Enter the survey password" required>
+                    <button type="button" class="pw-toggle" onclick="togglePw('surveyPassword', this)" title="Show/hide password">👁</button>
+                </div>
             </div>
 
             <button class="primary-btn" id="unlockBtn">Unlock Survey</button>
@@ -257,6 +283,17 @@
 
         // Initialize crypto libraries
         initCrypto(nacl, argon2);
+
+        window.togglePw = function(id, btn) {
+            const input = document.getElementById(id);
+            if (input.type === 'password') {
+                input.type = 'text';
+                btn.textContent = '🙈';
+            } else {
+                input.type = 'password';
+                btn.textContent = '👁';
+            }
+        };
 
         // Get survey ID from URL
         const surveyId = window.location.pathname.split('/survey/')[1];
