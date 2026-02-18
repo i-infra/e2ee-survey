@@ -16,6 +16,10 @@ build/
 .env.local
 .env.production
 
+# Deployment configuration files (contain API tokens)
+.deploy.*
+!.deploy.example
+
 # IDE files
 .vscode/
 .idea/
