@@ -44,13 +44,40 @@ export function parseSurveyMarkdown(markdown) {
     
     // Parse questions
     if (currentSection === 'questions' && trimmed.startsWith('- **')) {
+      // Match format: - **type** text [regex: /pattern/ hint: message]
       const match = trimmed.match(/^- \*\*(yes\/no|text)\*\* (.+)$/);
       if (match) {
-        const [, type, text] = match;
+        const [, type, fullText] = match;
+
+        // Extract regex pattern and hint if present
+        let text = fullText.trim();
+        let validation = null;
+
+        // Check for validation syntax: [regex: /pattern/flags hint: message]
+        // Pattern can contain anything except / followed by space or letter (flag)
+        // This matches: [regex: /pattern/flags hint: message]
+        const validationMatch = text.match(/^(.*?)\s*\[regex:\s*\/(.+?)\/([a-z]*)\s+hint:\s*(.+?)\]\s*$/);
+        if (validationMatch) {
+          text = validationMatch[1].trim();
+          const pattern = validationMatch[2];
+          const flags = validationMatch[3] || '';
+          const hint = validationMatch[4].trim();
+
+          validation = {
+            pattern: pattern,
+            hint: hint
+          };
+
+          if (flags) {
+            validation.flags = flags;
+          }
+        }
+
         questions.push({
           id: `q${questionId++}`,
           type: type === 'yes/no' ? 'yes_no' : 'text',
-          text: text.trim()
+          text: text,
+          validation: validation
         });
       }
       continue;
@@ -137,18 +164,26 @@ We'd love to hear your thoughts about our service. All responses are anonymous a
  */
 export function surveyToMarkdown(survey) {
   let markdown = `# ${survey.title}\n`;
-  
+
   if (survey.description) {
     markdown += `${survey.description}\n`;
   }
-  
+
   markdown += '\n## Questions\n\n';
-  
+
   survey.questions.forEach(question => {
     const type = question.type === 'yes_no' ? 'yes/no' : 'text';
-    markdown += `- **${type}** ${question.text}\n`;
+    let questionLine = `- **${type}** ${question.text}`;
+
+    // Add validation if present
+    if (question.validation && question.validation.pattern) {
+      const flags = question.validation.flags || '';
+      questionLine += ` [regex: /${question.validation.pattern}/${flags} hint: ${question.validation.hint}]`;
+    }
+
+    markdown += questionLine + '\n';
   });
-  
+
   return markdown;
 }
 
