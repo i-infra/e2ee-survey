@@ -403,6 +403,7 @@
         let encryptionKey = null;
         let responsesData = null;
         let currentSurveyId = null;
+        let decryptedResponses = [];
 
         // Check URL fragment for password
         async function checkUrlFragment() {
@@ -485,7 +486,7 @@
                 showStatus('Decrypting responses...', 'info');
 
                 // Decrypt all responses
-                const decryptedResponses = [];
+                decryptedResponses = [];
                 for (const response of responsesData.responses) {
                     try {
                         const answers = decryptData(new Uint8Array(response.answers), key);
@@ -646,24 +647,53 @@
 
         // Export functionality
         exportJsonBtn.addEventListener('click', () => {
+            if (!surveyData || !decryptedResponses) {
+                showStatus('No data available to export', 'error');
+                return;
+            }
+
             const exportData = {
-                survey: surveyData,
-                responses: responsesData.responses.map(r => ({
+                survey: {
+                    title: surveyData.title,
+                    description: surveyData.description,
+                    questions: surveyData.questions
+                },
+                responses: decryptedResponses.map(r => ({
                     id: r.id,
                     submittedAt: r.submittedAt,
-                    encryptedAnswers: r.answers
+                    answers: r.answers
                 })),
-                stats: responsesData.stats,
-                exportedAt: Date.now()
+                stats: {
+                    totalResponses: decryptedResponses.length,
+                    createdAt: responsesData.stats.createdAt,
+                    isExpired: responsesData.stats.isExpired,
+                    isAtLimit: responsesData.stats.isAtLimit
+                },
+                exportedAt: new Date().toISOString()
             };
 
-            downloadJson(exportData, `survey-${analysisId}-export.json`);
+            const filename = `${surveyData.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}-${new Date().toISOString().split('T')[0]}.json`;
+            downloadJson(exportData, filename);
+            showStatus('JSON export downloaded successfully', 'success');
+            setTimeout(hideStatus, 3000);
         });
 
         exportCsvBtn.addEventListener('click', () => {
-            // This would require decrypting responses again
-            // For now, show a simple message
-            alert('CSV export would be implemented here. It would include question headers and response data in a spreadsheet-friendly format.');
+            if (!surveyData || !decryptedResponses) {
+                showStatus('No data available to export', 'error');
+                return;
+            }
+
+            try {
+                const csv = generateCSV(surveyData, decryptedResponses);
+                const filename = `${surveyData.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}-${new Date().toISOString().split('T')[0]}.csv`;
+                downloadCSV(csv, filename);
+                showStatus('CSV export downloaded successfully', 'success');
+                setTimeout(hideStatus, 3000);
+            } catch (error) {
+                console.error('CSV export error:', error);
+                showStatus('Failed to export CSV: ' + error.message, 'error');
+            }
         });
 
         // Delete survey functionality
@@ -719,6 +749,78 @@
                 deleteSurveyBtn.innerHTML = 'Delete Survey';
             }
         });
+
+        function generateCSV(survey, responses) {
+            if (responses.length === 0) {
+                throw new Error('No responses to export');
+            }
+
+            const rows = [];
+
+            // Header row
+            const headers = ['Response ID', 'Submitted At'];
+            survey.questions.forEach((q, idx) => {
+                headers.push(`Q${idx + 1}: ${q.text}`);
+            });
+            rows.push(headers);
+
+            // Data rows
+            responses.forEach(response => {
+                const row = [
+                    response.id,
+                    new Date(response.submittedAt).toISOString()
+                ];
+
+                survey.questions.forEach(question => {
+                    const answer = response.answers[question.id];
+                    let value = '';
+
+                    if (answer && answer.value !== null && answer.value !== undefined) {
+                        if (question.type === 'yes_no') {
+                            value = answer.value ? 'Yes' : 'No';
+                        } else if (question.type === 'text') {
+                            // Escape quotes and wrap in quotes if contains comma, newline, or quote
+                            value = String(answer.value).replace(/"/g, '""');
+                            if (value.includes(',') || value.includes('\n') || value.includes('"')) {
+                                value = `"${value}"`;
+                            }
+                        }
+                    }
+
+                    row.push(value);
+                });
+
+                rows.push(row);
+            });
+
+            // Convert to CSV string
+            return rows.map(row =>
+                row.map(cell => {
+                    // If cell is already quoted (text fields), return as-is
+                    if (String(cell).startsWith('"') && String(cell).endsWith('"')) {
+                        return cell;
+                    }
+                    // Otherwise, escape and quote if necessary
+                    const str = String(cell);
+                    if (str.includes(',') || str.includes('\n') || str.includes('"')) {
+                        return `"${str.replace(/"/g, '""')}"`;
+                    }
+                    return str;
+                }).join(',')
+            ).join('\n');
+        }
+
+        function downloadCSV(csvContent, filename) {
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
 
         function downloadJson(data, filename) {
             const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
