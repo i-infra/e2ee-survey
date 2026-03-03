@@ -44,3 +44,9 @@ src/worker/assets.js
 # Temporary files
 *.tmp
 *.temp
+
+# Python virtual environment
+venv/
+__pycache__/
+*.pyc
+*.pyo
