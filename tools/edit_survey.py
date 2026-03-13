@@ -49,7 +49,7 @@ def load_env_file(env_file):
     return env_vars
 
 
-def cloudflare_query(account_id, api_token, database_id, sql):
+def cloudflare_query(account_id, api_token, database_id, sql, params=None):
     """Execute a SQL query against Cloudflare D1."""
     url = f"https://api.cloudflare.com/client/v4/accounts/{account_id}/d1/database/{database_id}/query"
 
@@ -60,9 +60,13 @@ def cloudflare_query(account_id, api_token, database_id, sql):
         config_file = f.name
 
     try:
+        body = {'sql': sql}
+        if params is not None:
+            body['params'] = params
+
         # Use curl with config file to avoid argument parsing issues
         result = subprocess.run(
-            ['curl', '-X', 'POST', url, '-K', config_file, '-d', json.dumps({'sql': sql})],
+            ['curl', '-X', 'POST', url, '-K', config_file, '-d', json.dumps(body)],
             capture_output=True,
             text=True,
             check=True
@@ -420,34 +424,33 @@ def main():
     print("\nRe-encrypting survey...")
     encrypted_list = encrypt_data(edited_survey, key)
 
-    # Prepare database update (not executing yet)
+    # Prepare database update
     print("\nPreparing database update...")
 
-    # Create JSON string with proper escaping for SQL
-    # Need to escape single quotes in JSON for SQL
-    encrypted_json = json.dumps(encrypted_list).replace("'", "''")
+    # Convert encrypted data to hex for SQLite BLOB literal (X'...')
+    # This ensures the data is stored as a BLOB, matching how the worker stores it
+    encrypted_bytes = bytes(encrypted_list)
+    encrypted_hex = encrypted_bytes.hex()
 
-    update_sql = f"UPDATE surveys SET questions = json('{encrypted_json}') WHERE id = '{args.survey_id}'"
+    update_sql = f"UPDATE surveys SET questions = X'{encrypted_hex}' WHERE id = '{args.survey_id}'"
 
     print("\n" + "="*80)
     print("DATABASE UPDATE REQUEST (NOT EXECUTED)")
     print("="*80)
     print(f"\nSQL Query:")
     print(update_sql[:500] + "..." if len(update_sql) > 500 else update_sql)
-    print(f"\nEncrypted data length: {len(encrypted_list)} bytes")
-    print(f"\nTo enable database updates, uncomment the cloudflare_query() call in the script.")
     print("\n" + "="*80)
 
     # DISABLED FOR NOW - Uncomment to enable database updates
-    # try:
-    #     cloudflare_query(account_id, api_token, database_id, update_sql)
-    #     print("\n✓ Survey updated successfully!")
-    #     print(f"  Survey ID: {args.survey_id}")
-    #     print(f"  Title: {edited_survey['title']}")
-    #     print(f"  Questions: {len(edited_survey['questions'])}")
-    # except Exception as e:
-    #     print(f"\nError updating database: {e}")
-    #     sys.exit(1)
+    try:
+         cloudflare_query(account_id, api_token, database_id, update_sql)
+         print("\n✓ Survey updated successfully!")
+         print(f"  Survey ID: {args.survey_id}")
+         print(f"  Title: {edited_survey['title']}")
+         print(f"  Questions: {len(edited_survey['questions'])}")
+    except Exception as e:
+         print(f"\nError updating database: {e}")
+         sys.exit(1)
 
     print("\n✓ Survey changes prepared (not saved to database)")
     print(f"  Survey ID: {args.survey_id}")
